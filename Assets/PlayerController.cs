@@ -61,19 +61,21 @@ public class PlayerController : MonoBehaviour
 	
 	void Update () 
     {
-        Vector3 move, strafe;
-        GetGroundAxis(out move, out strafe);
+        Vector3 forward, strafe;
+        GetGroundAxis(out forward, out strafe);
 
-        move *= Input.GetAxis(InputAxis.Move);
+        forward *= Input.GetAxis(InputAxis.Move);
         strafe *= Input.GetAxis(InputAxis.Strafe);
         
-        var moveDirection = move + strafe;
+        var moveDirection = forward + strafe;
         if (moveDirection.magnitude > 1F)
         {
             moveDirection.Normalize();
         }
 
-        _characterController.Move(moveDirection * WalkParameters.Speed * Time.deltaTime);
+        var move = moveDirection * WalkParameters.Speed * Time.deltaTime;
+        move.y = -5;
+        _characterController.Move(move);
 	}
 
     [Serializable]
