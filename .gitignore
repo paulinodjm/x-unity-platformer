@@ -11,3 +11,5 @@ Library
 *.csproj
 *.unityproj
 *.pidb
+
+obj/
