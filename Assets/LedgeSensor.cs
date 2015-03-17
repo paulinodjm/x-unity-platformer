@@ -23,6 +23,8 @@ public class LedgeSensor : MonoBehaviour
     void Awake()
     {
         Ledges = new List<Ledge>();
+        UpperLedges = new List<Ledge>();
+        LowerLedges = new List<Ledge>();
         _characterController = GetComponent<CharacterController>();
     }
 
