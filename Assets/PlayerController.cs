@@ -58,22 +58,24 @@ public class PlayerController : MonoBehaviour
 	
 	void Update () 
     {
+        var velocity = _characterController.velocity;
+        CalcVelocity(ref velocity);
+
+        velocity *= Time.deltaTime;
+        velocity.y = -5;
+        _characterController.Move(velocity);
+	}
+
+    private void CalcVelocity(ref Vector3 velocity)
+    {
         Vector3 forward, strafe;
         GetGroundAxis(out forward, out strafe);
 
         forward *= _inputController.Forward;
         strafe *= _inputController.Strafe;
-        
-        var moveDirection = forward + strafe;
-        if (moveDirection.magnitude > 1F)
-        {
-            moveDirection.Normalize();
-        }
 
-        var move = moveDirection * WalkParameters.Speed * Time.deltaTime;
-        move.y = -5;
-        _characterController.Move(move);
-	}
+        velocity = (forward + strafe) * WalkParameters.Speed;
+    }
 
     [Serializable]
     public struct GroundedMovementsInfo
