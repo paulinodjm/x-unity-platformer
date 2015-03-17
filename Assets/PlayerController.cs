@@ -2,20 +2,14 @@
 using System.Collections.Generic;
 using System;
 
+[RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(InputController))]
 public class PlayerController : MonoBehaviour
 {
     #region Inspector
 
-    [Space(10.0f)]
     [Tooltip("The player's point of view")]
     public GameObject Pov;
-
-    [Tooltip("Input parameters")]
-    public InputInfo InputAxis = new InputInfo()
-    {
-        Move = "Vertical",
-        Strafe = "Horizontal"
-    };
 
     [Tooltip("Walk parameters")]
     public GroundedMovementsInfo WalkParameters = new GroundedMovementsInfo()
@@ -26,6 +20,8 @@ public class PlayerController : MonoBehaviour
     #endregion
 
     private CharacterController _characterController;
+
+    private InputController _inputController;
 
     /// <summary>
     /// Returns the current player point of view.
@@ -57,6 +53,7 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         _characterController = GetComponent<CharacterController>();
+        _inputController = GetComponent<InputController>();
     }
 	
 	void Update () 
@@ -64,8 +61,8 @@ public class PlayerController : MonoBehaviour
         Vector3 forward, strafe;
         GetGroundAxis(out forward, out strafe);
 
-        forward *= Input.GetAxis(InputAxis.Move);
-        strafe *= Input.GetAxis(InputAxis.Strafe);
+        forward *= _inputController.Forward;
+        strafe *= _inputController.Strafe;
         
         var moveDirection = forward + strafe;
         if (moveDirection.magnitude > 1F)
@@ -77,16 +74,6 @@ public class PlayerController : MonoBehaviour
         move.y = -5;
         _characterController.Move(move);
 	}
-
-    [Serializable]
-    public struct InputInfo
-    {
-        [Tooltip("Input name for the \"move\" axis")]
-        public string Move;
-
-        [Tooltip("Input name for the \"strafe\" axis")]
-        public string Strafe;
-    }
 
     [Serializable]
     public struct GroundedMovementsInfo
