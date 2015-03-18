@@ -59,28 +59,96 @@ public class PlayerController : MonoBehaviour
 	void Update () 
     {
         var velocity = _characterController.velocity;
-        CalcVelocity(ref velocity);
+        CalcVelocity(ref velocity, WalkParameters);
 
         velocity *= Time.deltaTime;
         velocity.y = -5;
         _characterController.Move(velocity);
 	}
 
-    private void CalcVelocity(ref Vector3 velocity)
+    private void CalcVelocity(ref Vector3 velocity, GroundedMovementsInfo parameters)
     {
-        Vector3 forward, strafe;
-        GetGroundAxis(out forward, out strafe);
+        Vector3 forwardAxis, strafeAxis;
+        GetGroundAxis(out forwardAxis, out strafeAxis);
 
-        forward *= _inputController.Forward;
-        strafe *= _inputController.Strafe;
+        forwardAxis *= _inputController.Forward;
+        strafeAxis *= _inputController.Strafe;
 
-        velocity = (forward + strafe) * WalkParameters.Speed;
+        float speed;
+        var desiredDirection = (forwardAxis + strafeAxis).normalized;
+        if (desiredDirection.magnitude > 0F)
+        {
+            var desiredSpeed = (forwardAxis + strafeAxis).magnitude * parameters.Speed;
+            var strafeDirection = Vector3.Cross(desiredDirection, Vector3.up);
+
+            var actualMove = Vector3.Project(velocity, desiredDirection);
+            var actualStrafe = Vector3.Project(velocity, strafeDirection);
+
+            // -> move (forward) velocity
+            speed = actualMove.magnitude;
+            if (actualMove.normalized == -desiredDirection)
+            {
+                speed = -speed;
+            }
+
+            if (speed <= desiredSpeed)
+            {
+                speed += parameters.Acceleration * Time.deltaTime;
+                if (speed > desiredSpeed)
+                {
+                    speed = desiredSpeed;
+                }
+            }
+            else
+            {
+                speed -= parameters.Friction * Time.deltaTime;
+                if (speed < desiredSpeed)
+                {
+                    speed = desiredSpeed;
+                }
+            }
+            actualMove = desiredDirection * speed;
+
+            // -> strafe velocity
+            speed = actualStrafe.magnitude;
+            if (speed > 0F)
+            {
+                speed -= parameters.Friction * Time.deltaTime;
+                if (speed < 0F)
+                {
+                    speed = 0F;
+                }
+                actualStrafe = actualStrafe.normalized * speed;
+            }
+
+            // -> net velocity
+            velocity = actualMove + actualStrafe;
+        }
+        else
+        {
+            var velocityDirection = velocity.normalized;
+            speed = velocity.magnitude;
+
+            speed -= parameters.Friction * Time.deltaTime;
+            if (speed < 0F)
+            {
+                speed = 0F;
+            }
+
+            velocity = velocityDirection * speed;
+        }
     }
 
     [Serializable]
     public struct GroundedMovementsInfo
     {
-        [Tooltip("The speed when grounded")]
+        [Tooltip("The target speed when grounded")]
         public float Speed;
+
+        [Tooltip("The acceleration rate when grounded")]
+        public float Acceleration;
+
+        [Tooltip("The friction rate when grounded")]
+        public float Friction;
     }
 }
