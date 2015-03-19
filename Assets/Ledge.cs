@@ -43,6 +43,7 @@ public class Ledge : MonoBehaviour
 
         capsuleGameObject.transform.position = transform.position;
         capsuleGameObject.transform.rotation = transform.rotation;
+        capsuleGameObject.layer = gameObject.layer;
 
         var capsule = capsuleGameObject.AddComponent<CapsuleCollider>();
         capsule.radius = _colliderRadius;
