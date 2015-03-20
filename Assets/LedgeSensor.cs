@@ -96,12 +96,16 @@ public class LedgeSensor : MonoBehaviour
             // calcule le point d'accroche
             //
             // <- à hauteur du joueur
-            vector = ledge.transform.position - transform.position;
+            vector = ledgeStart - transform.position;
             grabPosition = Vector3.Project(vector, ledge.transform.forward) + transform.position;
+            var oldGrabPosition = grabPosition;
 
             // <- à hauteur du rebord
-            vector = grabPosition - ledge.transform.position;
-            grabPosition = Vector3.Project(vector, ledge.transform.right) + ledge.transform.position;
+            //vector = grabPosition - ledge.transform.position;
+            var ledgeEndVertical = ledgeEnd;
+            ledgeEndVertical.y = ledgeStart.y;
+            var pct = Mathf.InverseLerp(0, Vector3.Distance(ledgeStart, ledgeEndVertical), Vector3.Distance(ledgeStart, grabPosition));
+            grabPosition.y = Mathf.Lerp(ledgeStart.y, ledgeEnd.y, pct);
 
             var playerPosition = transform.position;
             playerPosition.y = grabPosition.y;
@@ -143,6 +147,8 @@ public class LedgeSensor : MonoBehaviour
             {
                 safeGrabPosition = grabPosition;
             }
+
+            Debug.DrawLine(playerPosition, grabPosition, Color.red);
 
             var nextPosition = safeGrabPosition + (grabPosition - playerPosition).normalized * _characterController.radius;
             TargetPositions.Add(nextPosition);
