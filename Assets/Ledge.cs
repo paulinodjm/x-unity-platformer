@@ -16,6 +16,50 @@ public class Ledge : MonoBehaviour
 
     private const float _colliderRadius = 1.0F;
 
+    /// <summary>
+    /// Returns the start point of this ledge
+    /// </summary>
+    public Vector3 Start
+    {
+        get
+        {
+            return transform.position;
+        }
+    }
+
+    /// <summary>
+    /// Returns the end point of this ledge
+    /// </summary>
+    public Vector3 End
+    {
+        get
+        {
+            return Start + (Direction * Length);
+        }
+    }
+
+    /// <summary>
+    /// Returns the ledge direction
+    /// </summary>
+    public Vector3 Direction
+    {
+        get
+        {
+            return transform.right;
+        }
+    }
+
+    /// <summary>
+    /// Returns the ledge length
+    /// </summary>
+    public float Length
+    {
+        get
+        {
+            return transform.lossyScale.x;
+        }
+    }
+
     void OnDrawGizmos()
     {
         Gizmos.color = _color;

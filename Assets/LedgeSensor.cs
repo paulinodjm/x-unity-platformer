@@ -87,25 +87,19 @@ public class LedgeSensor : MonoBehaviour
             Vector3 vector, grabPosition;
 
             //
-            // délimite le rebord
-            //
-            var ledgeStart = ledge.transform.position;
-            var ledgeEnd = ledgeStart + (ledge.transform.right * ledge.transform.lossyScale.x);
-
-            //
             // calcule le point d'accroche
             //
             // <- à hauteur du joueur
-            vector = ledgeStart - transform.position;
+            vector = ledge.Start - transform.position;
             grabPosition = Vector3.Project(vector, ledge.transform.forward) + transform.position;
             var oldGrabPosition = grabPosition;
 
             // <- à hauteur du rebord
             //vector = grabPosition - ledge.transform.position;
-            var ledgeEndVertical = ledgeEnd;
-            ledgeEndVertical.y = ledgeStart.y;
-            var pct = Mathf.InverseLerp(0, Vector3.Distance(ledgeStart, ledgeEndVertical), Vector3.Distance(ledgeStart, grabPosition));
-            grabPosition.y = Mathf.Lerp(ledgeStart.y, ledgeEnd.y, pct);
+            var ledgeEndVertical = ledge.End;
+            ledgeEndVertical.y = ledge.Start.y;
+            var pct = Mathf.InverseLerp(0, Vector3.Distance(ledge.Start, ledgeEndVertical), Vector3.Distance(ledge.Start, grabPosition));
+            grabPosition.y = Mathf.Lerp(ledge.Start.y, ledge.End.y, pct);
 
             var playerPosition = transform.position;
             playerPosition.y = grabPosition.y;
@@ -115,14 +109,14 @@ public class LedgeSensor : MonoBehaviour
             //
             bool grabPositionOk;
 
-            if ((grabPosition - ledgeStart).normalized == -ledge.transform.right)
+            if ((grabPosition - ledge.Start).normalized == -ledge.Direction)
             {
                 grabPositionOk = false;
             }
             else
             {
-                var distanceFromLedgeStart = (grabPosition - ledgeStart).magnitude;
-                grabPositionOk = distanceFromLedgeStart <= ledge.transform.lossyScale.x;
+                var distanceFromLedgeStart = (grabPosition - ledge.Start).magnitude;
+                grabPositionOk = distanceFromLedgeStart <= ledge.Length;
             }
             if (!grabPositionOk)
                 continue;
@@ -131,17 +125,17 @@ public class LedgeSensor : MonoBehaviour
             // gère les extrémités de rebords (attention aux pentes!)
             //
             Vector3 safeGrabPosition;
-            if (ledge.transform.lossyScale.x <= (_characterController.radius * 2))
+            if (ledge.Length <= (_characterController.radius * 2))
             {
-                safeGrabPosition = ledgeStart + (ledge.transform.right * _characterController.radius);
+                safeGrabPosition = ledge.Start + (ledge.Direction * _characterController.radius);
             }
-            else if ((grabPosition - ledgeStart).magnitude < _characterController.radius)
+            else if ((grabPosition - ledge.Start).magnitude < _characterController.radius)
             {
-                safeGrabPosition = ledgeStart + (ledge.transform.right * _characterController.radius);
+                safeGrabPosition = ledge.Start + (ledge.Direction * _characterController.radius);
             }
-            else if ((grabPosition - ledgeEnd).magnitude < _characterController.radius)
+            else if ((grabPosition - ledge.End).magnitude < _characterController.radius)
             {
-                safeGrabPosition = ledgeEnd - (ledge.transform.right * _characterController.radius);
+                safeGrabPosition = ledge.End - (ledge.Direction * _characterController.radius);
             }
             else
             {
