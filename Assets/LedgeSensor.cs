@@ -77,6 +77,9 @@ public class LedgeSensor : MonoBehaviour
                 continue;
 
             var targetPosition = CalcTargetPosition(calculator);
+            if (IsStep(targetPosition))
+                continue;
+
             TargetPositions.Add(targetPosition);
         }
     }
@@ -111,6 +114,16 @@ public class LedgeSensor : MonoBehaviour
         }
 
         return targetPosition;
+    }
+
+    /// <summary>
+    /// Tell if the target position is a simple step or a real obstacle
+    /// </summary>
+    /// <param name="target">The target position</param>
+    /// <returns>True if the position is a step; false otherwise</returns>
+    private bool IsStep(Vector3 target)
+    {
+        return Mathf.Abs(target.y - transform.position.y + Margin) <= _characterController.stepOffset;
     }
 
     /// <summary>
