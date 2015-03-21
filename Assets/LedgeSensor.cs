@@ -3,6 +3,16 @@ using System.Collections.Generic;
 
 public class LedgeSensor : MonoBehaviour
 {
+    #region Inspector
+
+    [Tooltip("The margin kept between a ledge and the player")]
+    public float Margin = 0F;
+
+    [Tooltip("[0; infinite]")]
+    public float MaxClimbDownHeight = 1F;
+
+    #endregion
+
     /// <summary>
     /// Returns the ledges near the character.
     /// </summary>
@@ -61,13 +71,46 @@ public class LedgeSensor : MonoBehaviour
 
         foreach (var ledge in Ledges)
         {
-            var calculator = new LedgeGrabCalculator(_characterController, ledge);
+            var calculator = new LedgeGrabCalculator(_characterController, ledge, Margin);
 
             if (!calculator.IsValid)
                 continue;
 
-            TargetPositions.Add(calculator.GrabPosition + (calculator.GrabDirection * _characterController.radius));
+            var targetPosition = CalcTargetPosition(calculator);
+            TargetPositions.Add(targetPosition);
         }
+    }
+
+    /// <summary>
+    /// Calculates the position the character will reach if he uses the ledge
+    /// </summary>
+    /// <param name="ledgeInfo">The ledge grabbing informations</param>
+    /// <returns>The target position</returns>
+    private Vector3 CalcTargetPosition(LedgeGrabCalculator ledgeInfo)
+    {
+        var footPosition = ledgeInfo.GrabPosition + (ledgeInfo.GrabDirection * (_characterController.radius + Margin));
+        footPosition.y += Margin;
+
+        var topPosition = footPosition;
+        topPosition.y += _characterController.height - _characterController.radius;
+
+        var bottomPosition = footPosition;
+        bottomPosition.y += _characterController.radius;
+
+        RaycastHit hitInfo;
+        Vector3 targetPosition;
+        if (Physics.CapsuleCast(topPosition, bottomPosition, _characterController.radius, Vector3.down, out hitInfo, MaxClimbDownHeight))
+        {
+            targetPosition = footPosition;
+            targetPosition.y = hitInfo.point.y;
+        }
+        else
+        {
+            targetPosition = bottomPosition;
+            targetPosition.y -= _characterController.radius + MaxClimbDownHeight;
+        }
+
+        return targetPosition;
     }
 
     /// <summary>
@@ -88,6 +131,15 @@ public class LedgeSensor : MonoBehaviour
         /// Returns the character
         /// </summary>
         public CharacterController Character
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// The margin kept between the ledge and the character
+        /// </summary>
+        public float Margin
         {
             get;
             private set;
@@ -126,10 +178,14 @@ public class LedgeSensor : MonoBehaviour
         /// </summary>
         /// <param name="character">The character</param>
         /// <param name="ledge">The ledge</param>
-        public LedgeGrabCalculator(CharacterController character, Ledge ledge)
+        /// <param name="margin">The margin</param>
+        public LedgeGrabCalculator(CharacterController character, Ledge ledge, float margin = 0F)
         {
             Ledge = ledge;
             Character = character;
+            Margin = margin;
+
+            _radius = Character.radius + margin;
 
             CalcRelativePosition();
             CalcRawGrabPosition();
@@ -139,6 +195,11 @@ public class LedgeSensor : MonoBehaviour
             CalcSafeGrabPosition();
             CalcFinalGrabPosition();
         }
+
+        /// <summary>
+        /// The used character radius
+        /// </summary>
+        private float _radius;
 
         /// <summary>
         /// The character position, relative to the ledge and in a flat system
@@ -203,17 +264,17 @@ public class LedgeSensor : MonoBehaviour
         /// </summary>
         private void CalcSafeGrabPosition()
         {
-            if (Ledge.FlatLength <= (Character.radius * 2))
+            if (Ledge.FlatLength <= (_radius * 2))
             {
                 _safeGrabPosition = Ledge.Start + (Ledge.FlatDirection * (Ledge.FlatLength / 2F));
             }
-            else if (_rawGrabPosition.magnitude < Character.radius)
+            else if (_rawGrabPosition.magnitude < _radius)
             {
-                _safeGrabPosition = Ledge.Start + (Ledge.FlatDirection * Character.radius);
+                _safeGrabPosition = Ledge.Start + (Ledge.FlatDirection * _radius);
             }
-            else if (_rawGrabPosition.magnitude > Ledge.FlatLength - Character.radius)
+            else if (_rawGrabPosition.magnitude > Ledge.FlatLength - _radius)
             {
-                _safeGrabPosition = Ledge.FlatEnd - (Ledge.FlatDirection * Character.radius);
+                _safeGrabPosition = Ledge.FlatEnd - (Ledge.FlatDirection * _radius);
             }
             else
             {
