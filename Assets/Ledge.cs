@@ -60,6 +60,41 @@ public class Ledge : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Returns the end point if the ledge would be flat
+    /// </summary>
+    public Vector3 FlatEnd
+    {
+        get
+        {
+            var flatEnd = End;
+            flatEnd.y = Start.y;
+            return flatEnd;
+        }
+    }
+
+    /// <summary>
+    /// Returns the ledge direction, if it would be flat
+    /// </summary>
+    public Vector3 FlatDirection
+    {
+        get
+        {
+            return (FlatEnd - Start).normalized;
+        }
+    }
+
+    /// <summary>
+    /// Returns the ledge length, if it would be flat
+    /// </summary>
+    public float FlatLength
+    {
+        get
+        {
+            return Vector3.Distance(Start, FlatEnd);
+        }
+    }
+
     void OnDrawGizmos()
     {
         Gizmos.color = _color;
