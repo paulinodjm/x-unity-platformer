@@ -72,6 +72,11 @@ public class LedgeSensor : MonoBehaviour
 
             Gizmos.color = new Color(0F, 0.5F, 1F, 0.5F);
             Gizmos.DrawSphere(drawPosition, _characterController.radius);
+
+            if (grabInfo.IsCrossed)
+            {
+                Debug.DrawLine(grabInfo.Ledge.Start, grabInfo.Ledge.End, Color.red);
+            }
         }
     }
 
@@ -87,7 +92,7 @@ public class LedgeSensor : MonoBehaviour
             if (!checker.HasTargetPosition || !checker.HasFromPosition || checker.IsStep)
                 continue;
 
-            var info = new GrabInfo(ledge, calculator.GrabPosition, calculator.GrabDirection, checker.FromPosition, checker.TargetPosition, calculator.IsValid);
+            var info = new GrabInfo(ledge, calculator.GrabPosition, calculator.GrabDirection, checker.FromPosition, checker.TargetPosition, calculator.IsValid, calculator.IsCrossed);
             GrabInfos.Add(info);
         }
     }
@@ -161,6 +166,15 @@ public class LedgeSensor : MonoBehaviour
         }
 
         /// <summary>
+        /// Returns a value telling whether the character is crossing the edge or not
+        /// </summary>
+        public bool IsCrossed
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Creates a new grab info
         /// </summary>
         /// <param name="ledge">The ledge</param>
@@ -169,7 +183,8 @@ public class LedgeSensor : MonoBehaviour
         /// <param name="fromPosition">The start position</param>
         /// <param name="targetPosition">The target position</param>
         /// <param name="isInFront">A value indicating whether the player is in front of the ledge</param>
-        public GrabInfo(Ledge ledge, Vector3 grabPosition, Vector3 grabDirection, Vector3 fromPosition, Vector3 targetPosition, bool isInFront)
+        /// <param name="isCrossed">A value telling whether the character is crossing the edge or not</param>
+        public GrabInfo(Ledge ledge, Vector3 grabPosition, Vector3 grabDirection, Vector3 fromPosition, Vector3 targetPosition, bool isInFront, bool isCrossed)
         {
             Ledge = ledge;
             GrabPosition = grabPosition;
@@ -177,6 +192,7 @@ public class LedgeSensor : MonoBehaviour
             FromPosition = fromPosition;
             TargetPosition = targetPosition;
             IsInFront = isInFront;
+            IsCrossed = isCrossed;
         }
     }
 
@@ -223,6 +239,15 @@ public class LedgeSensor : MonoBehaviour
         }
 
         /// <summary>
+        /// Returns a value telling whether the character is crossing the edge or not. 
+        /// </summary>
+        public bool IsCrossed
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Returns the perpendicular direction to reach the ledge
         /// </summary>
         public Vector3 GrabDirection
@@ -260,6 +285,7 @@ public class LedgeSensor : MonoBehaviour
             ValidateRawGrabPosition();
             CalcSafeGrabPosition();
             CalcFinalGrabPosition();
+            CalcCrossing();
         }
 
         /// <summary>
@@ -366,6 +392,22 @@ public class LedgeSensor : MonoBehaviour
             var grabPosition = _safeGrabPosition;
             grabPosition.y = height;
             GrabPosition = grabPosition;
+        }
+
+        /// <summary>
+        /// Initialize the IsCrossed property
+        /// </summary>
+        private void CalcCrossing()
+        {
+            if (IsValid)
+            {
+                IsCrossed = Vector3.Distance(_relativePosition, _rawGrabPosition) <= Character.radius;
+            }
+            else
+            {
+                IsCrossed = _relativePosition.magnitude <= Character.radius
+                    || Vector3.Distance(Ledge.FlatEnd - Ledge.Start, _relativePosition) <= Character.radius;
+            }
         }
     }
 
