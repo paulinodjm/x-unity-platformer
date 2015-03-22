@@ -76,9 +76,6 @@ public class LedgeSensor : MonoBehaviour
         {
             var calculator = new LedgeGrabCalculator(_characterController, ledge, Margin);
 
-            if (!calculator.IsValid)
-                continue;
-
             Vector3 targetPosition;
             if (!CalcTargetPosition(calculator, out targetPosition) || IsStep(targetPosition))
                 continue;
@@ -211,8 +208,7 @@ public class LedgeSensor : MonoBehaviour
             CalcRelativePosition();
             CalcRawGrabPosition();
             CalcGrabDirection();
-            if (!ValidateRawGrabPosition())
-                return;
+            ValidateRawGrabPosition();
             CalcSafeGrabPosition();
             CalcFinalGrabPosition();
         }
@@ -271,12 +267,19 @@ public class LedgeSensor : MonoBehaviour
         {
             if (_rawGrabPosition.normalized == -Ledge.FlatDirection)
             {
+                _rawGrabPosition = Vector3.zero;
+                IsValid = false;
+            }
+            else if (_rawGrabPosition.magnitude > Ledge.FlatLength)
+            {
+                _rawGrabPosition = Ledge.FlatEnd - Ledge.Start;
                 IsValid = false;
             }
             else
             {
-                IsValid = _rawGrabPosition.magnitude <= Ledge.FlatLength;
+                IsValid = true;
             }
+
             return IsValid;
         }
 
