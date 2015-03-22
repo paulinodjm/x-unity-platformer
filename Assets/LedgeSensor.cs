@@ -22,15 +22,15 @@ public class LedgeSensor : MonoBehaviour
     public List<Ledge> Ledges { get; private set; }
 
     /// <summary>
-    /// Returns the positions the character can reach using the legdes.
+    /// Returns all the grab informations
     /// </summary>
-    public List<Vector3> TargetPositions { get; private set; }
+    public List<GrabInfo> GrabInfos { get; private set; }
 
     private CharacterController _characterController;
 
     public LedgeSensor()
     {
-        TargetPositions = new List<Vector3>();
+        GrabInfos = new List<GrabInfo>();
     }
 
     void Awake()
@@ -58,81 +58,122 @@ public class LedgeSensor : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.matrix = Matrix4x4.identity;
-        Gizmos.color = new Color(1F, 0F, 0F, 0.5F);
 
-        foreach (var position in TargetPositions)
+        foreach (var grabInfo in GrabInfos)
         {
-            var drawPosition = position;
+            var drawPosition = grabInfo.TargetPosition;
             drawPosition.y += _characterController.radius;
+
+            Gizmos.color = grabInfo.IsInFront ? new Color(0F, 1F, 0F, 0.5F) : new Color(1F, 0F, 0F, 0.5F);
             Gizmos.DrawSphere(drawPosition, _characterController.radius);
         }
     }
 
     void Update()
     {
-        TargetPositions.Clear();
+        GrabInfos.Clear();
 
         foreach (var ledge in Ledges)
         {
             var calculator = new LedgeGrabCalculator(_characterController, ledge, Margin);
+            var checker = new ClimbPositionChecker(calculator, CollisionLayers, MaxClimbDownHeight);
 
-            Vector3 targetPosition;
-            if (!CalcTargetPosition(calculator, out targetPosition) || IsStep(targetPosition))
+            if (!checker.HasTargetPosition || checker.IsStep)
                 continue;
 
-            TargetPositions.Add(targetPosition);
+            var info = new GrabInfo(ledge, calculator.GrabPosition, calculator.GrabDirection, checker.TargetPosition, calculator.IsValid);
+            GrabInfos.Add(info);
         }
     }
 
     /// <summary>
-    /// Calculates the position the character will reach if he uses the ledge
+    /// Holds the grab informations
     /// </summary>
-    /// <param name="ledgeInfo">The ledge grabbing informations</param>
-    /// <param name="targetPosition">The target position</param>
-    /// <returns>A value indicating whether the climb is possible; if false, the target position is not valid.</returns>
-    private bool CalcTargetPosition(LedgeGrabCalculator ledgeInfo, out Vector3 targetPosition)
+    public struct GrabInfo
     {
-        var footPosition = ledgeInfo.GrabPosition + (ledgeInfo.GrabDirection * (_characterController.radius + Margin));
-        footPosition.y += Margin;
-
-        var topPosition = footPosition;
-        topPosition.y += _characterController.height - _characterController.radius;
-
-        var bottomPosition = footPosition;
-        bottomPosition.y += _characterController.radius + Margin;
-
-        if (Physics.CheckCapsule(topPosition, bottomPosition, _characterController.radius, CollisionLayers))
+        /// <summary>
+        /// Returns the ledge
+        /// </summary>
+        public Ledge Ledge
         {
-            targetPosition = Vector3.zero;
-            return false;
+            get;
+            private set;
         }
 
-        RaycastHit hitInfo;
-        if (Physics.CapsuleCast(topPosition, bottomPosition, _characterController.radius, Vector3.down, out hitInfo, MaxClimbDownHeight, CollisionLayers))
+        /// <summary>
+        /// Returns the grab position
+        /// </summary>
+        public Vector3 GrabPosition
         {
-            targetPosition = footPosition;
-            targetPosition.y = hitInfo.point.y;
+            get;
+            private set;
         }
-        else
+
+        /// <summary>
+        /// Returns the grab direction
+        /// </summary>
+        public Vector3 GrabDirection
         {
-            targetPosition = bottomPosition;
-            targetPosition.y -= _characterController.radius + MaxClimbDownHeight;
+            get;
+            private set;
         }
-        return true;
+
+        /// <summary>
+        /// Returns the target position
+        /// </summary>
+        public Vector3 TargetPosition
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Returns the start position
+        /// </summary>
+        public Vector3 FromPosition
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Returns a value indicating whether the player is in front of the ledge
+        /// </summary>
+        public bool IsInFront
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Returns a value indicatig whether the ledge is a simple step
+        /// </summary>
+        public bool IsStep
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Creates a new grab info
+        /// </summary>
+        /// <param name="ledge">The ledge</param>
+        /// <param name="grabPosition">The grab position</param>
+        /// <param name="grabDirection">The grab direction</param>
+        /// <param name="targetPosition">The target position</param>
+        /// <param name="isInFront">A value indicating whether the player is in front of the ledge</param>
+        public GrabInfo(Ledge ledge, Vector3 grabPosition, Vector3 grabDirection, Vector3 targetPosition, bool isInFront)
+        {
+            Ledge = ledge;
+            GrabPosition = grabPosition;
+            GrabDirection = grabDirection;
+            TargetPosition = targetPosition;
+            IsInFront = isInFront;
+        }
     }
 
     /// <summary>
-    /// Tell if the target position is a simple step or a real obstacle
-    /// </summary>
-    /// <param name="target">The target position</param>
-    /// <returns>True if the position is a step; false otherwise</returns>
-    private bool IsStep(Vector3 target)
-    {
-        return Mathf.Abs(target.y - transform.position.y + Margin) <= _characterController.stepOffset;
-    }
-
-    /// <summary>
-    /// Performs the calculations to determine the grab position
+    /// Performs the calculations to determine the grab position on a ledge
     /// </summary>
     private class LedgeGrabCalculator
     {
@@ -317,6 +358,128 @@ public class LedgeSensor : MonoBehaviour
             var grabPosition = _safeGrabPosition;
             grabPosition.y = height;
             GrabPosition = grabPosition;
+        }
+    }
+
+    /// <summary>
+    /// Performs the collision checks
+    /// </summary>
+    private class ClimbPositionChecker
+    {
+        /// <summary>
+        /// Returns the grab informations
+        /// </summary>
+        public LedgeGrabCalculator GrabInfo
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Returns the mask used to check the collisions
+        /// </summary>
+        public LayerMask CollisionLayers
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Returns the maximum height the character can climb down
+        /// </summary>
+        public float MaxClimbDownHeight
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Returns a value indicatig whether using the ledge is like climbing a simple step
+        /// </summary>
+        public bool IsStep
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Returns the target position
+        /// </summary>
+        public Vector3 TargetPosition
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Returns a value indicating whether the target position is valid or not
+        /// </summary>
+        public bool HasTargetPosition
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Creates a new collision checker
+        /// </summary>
+        /// <param name="grabInfo">The grab informations</param>
+        /// <param name="collisionLayers">The mask used to check the collisions</param>
+        /// <param name="maxClimbDownHeight">The maximum height the character can climb down</param>
+        public ClimbPositionChecker(LedgeGrabCalculator grabInfo, LayerMask collisionLayers, float maxClimbDownHeight)
+        {
+            GrabInfo = grabInfo;
+            CollisionLayers = collisionLayers;
+            MaxClimbDownHeight = maxClimbDownHeight;
+
+            CalcTargetPosition();
+            CalcIsStep();
+        }
+
+        /// <summary>
+        /// Perform the target position check
+        /// </summary>
+        private void CalcTargetPosition()
+        {
+            var footPosition = GrabInfo.GrabPosition + (GrabInfo.GrabDirection * (GrabInfo.Character.radius + GrabInfo.Margin));
+            footPosition.y += GrabInfo.Margin;
+
+            var topPosition = footPosition;
+            topPosition.y += GrabInfo.Character.height - GrabInfo.Character.radius;
+
+            var bottomPosition = footPosition;
+            bottomPosition.y += GrabInfo.Character.radius + GrabInfo.Margin;
+
+            if (Physics.CheckCapsule(topPosition, bottomPosition, GrabInfo.Character.radius, CollisionLayers))
+            {
+                TargetPosition = Vector3.zero;
+                HasTargetPosition = false;
+                return;
+            }
+
+            Vector3 targetPosition;
+            RaycastHit hitInfo;
+            if (Physics.CapsuleCast(topPosition, bottomPosition, GrabInfo.Character.radius, Vector3.down, out hitInfo, MaxClimbDownHeight, CollisionLayers))
+            {
+                targetPosition = footPosition;
+                targetPosition.y = hitInfo.point.y;
+            }
+            else
+            {
+                targetPosition = bottomPosition;
+                targetPosition.y -= GrabInfo.Character.radius + MaxClimbDownHeight;
+            }
+
+            TargetPosition = targetPosition;
+            HasTargetPosition = true;
+        }
+
+        /// <summary>
+        /// Initialize the IsStep property
+        /// </summary>
+        private void CalcIsStep()
+        {
+            IsStep = Mathf.Abs(TargetPosition.y - GrabInfo.Character.transform.position.y + GrabInfo.Margin) <= GrabInfo.Character.stepOffset;
         }
     }
 }
