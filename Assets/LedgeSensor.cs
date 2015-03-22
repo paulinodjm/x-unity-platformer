@@ -11,6 +11,9 @@ public class LedgeSensor : MonoBehaviour
     [Tooltip("[0; infinite]")]
     public float MaxClimbDownHeight = 1F;
 
+    [Tooltip("The layer mask used to check the collisions")]
+    public LayerMask CollisionLayers;
+
     #endregion
 
     /// <summary>
@@ -76,8 +79,8 @@ public class LedgeSensor : MonoBehaviour
             if (!calculator.IsValid)
                 continue;
 
-            var targetPosition = CalcTargetPosition(calculator);
-            if (IsStep(targetPosition))
+            Vector3 targetPosition;
+            if (!CalcTargetPosition(calculator, out targetPosition) || IsStep(targetPosition))
                 continue;
 
             TargetPositions.Add(targetPosition);
@@ -88,8 +91,9 @@ public class LedgeSensor : MonoBehaviour
     /// Calculates the position the character will reach if he uses the ledge
     /// </summary>
     /// <param name="ledgeInfo">The ledge grabbing informations</param>
-    /// <returns>The target position</returns>
-    private Vector3 CalcTargetPosition(LedgeGrabCalculator ledgeInfo)
+    /// <param name="targetPosition">The target position</param>
+    /// <returns>A value indicating whether the climb is possible; if false, the target position is not valid.</returns>
+    private bool CalcTargetPosition(LedgeGrabCalculator ledgeInfo, out Vector3 targetPosition)
     {
         var footPosition = ledgeInfo.GrabPosition + (ledgeInfo.GrabDirection * (_characterController.radius + Margin));
         footPosition.y += Margin;
@@ -98,11 +102,16 @@ public class LedgeSensor : MonoBehaviour
         topPosition.y += _characterController.height - _characterController.radius;
 
         var bottomPosition = footPosition;
-        bottomPosition.y += _characterController.radius;
+        bottomPosition.y += _characterController.radius + Margin;
+
+        if (Physics.CheckCapsule(topPosition, bottomPosition, _characterController.radius, CollisionLayers))
+        {
+            targetPosition = Vector3.zero;
+            return false;
+        }
 
         RaycastHit hitInfo;
-        Vector3 targetPosition;
-        if (Physics.CapsuleCast(topPosition, bottomPosition, _characterController.radius, Vector3.down, out hitInfo, MaxClimbDownHeight))
+        if (Physics.CapsuleCast(topPosition, bottomPosition, _characterController.radius, Vector3.down, out hitInfo, MaxClimbDownHeight, CollisionLayers))
         {
             targetPosition = footPosition;
             targetPosition.y = hitInfo.point.y;
@@ -112,8 +121,7 @@ public class LedgeSensor : MonoBehaviour
             targetPosition = bottomPosition;
             targetPosition.y -= _characterController.radius + MaxClimbDownHeight;
         }
-
-        return targetPosition;
+        return true;
     }
 
     /// <summary>
