@@ -66,6 +66,12 @@ public class LedgeSensor : MonoBehaviour
 
             Gizmos.color = grabInfo.IsInFront ? new Color(0F, 1F, 0F, 0.5F) : new Color(1F, 0F, 0F, 0.5F);
             Gizmos.DrawSphere(drawPosition, _characterController.radius);
+
+            drawPosition = grabInfo.FromPosition;
+            drawPosition.y += _characterController.radius;
+
+            Gizmos.color = new Color(0F, 0.5F, 1F, 0.5F);
+            Gizmos.DrawSphere(drawPosition, _characterController.radius);
         }
     }
 
@@ -78,10 +84,10 @@ public class LedgeSensor : MonoBehaviour
             var calculator = new LedgeGrabCalculator(_characterController, ledge, Margin);
             var checker = new ClimbPositionChecker(calculator, CollisionLayers, MaxClimbDownHeight);
 
-            if (!checker.HasTargetPosition || checker.IsStep)
+            if (!checker.HasTargetPosition || !checker.HasFromPosition || checker.IsStep)
                 continue;
 
-            var info = new GrabInfo(ledge, calculator.GrabPosition, calculator.GrabDirection, checker.TargetPosition, calculator.IsValid);
+            var info = new GrabInfo(ledge, calculator.GrabPosition, calculator.GrabDirection, checker.FromPosition, checker.TargetPosition, calculator.IsValid);
             GrabInfos.Add(info);
         }
     }
@@ -160,13 +166,15 @@ public class LedgeSensor : MonoBehaviour
         /// <param name="ledge">The ledge</param>
         /// <param name="grabPosition">The grab position</param>
         /// <param name="grabDirection">The grab direction</param>
+        /// <param name="fromPosition">The start position</param>
         /// <param name="targetPosition">The target position</param>
         /// <param name="isInFront">A value indicating whether the player is in front of the ledge</param>
-        public GrabInfo(Ledge ledge, Vector3 grabPosition, Vector3 grabDirection, Vector3 targetPosition, bool isInFront)
+        public GrabInfo(Ledge ledge, Vector3 grabPosition, Vector3 grabDirection, Vector3 fromPosition, Vector3 targetPosition, bool isInFront)
         {
             Ledge = ledge;
             GrabPosition = grabPosition;
             GrabDirection = grabDirection;
+            FromPosition = fromPosition;
             TargetPosition = targetPosition;
             IsInFront = isInFront;
         }
@@ -421,6 +429,24 @@ public class LedgeSensor : MonoBehaviour
         }
 
         /// <summary>
+        /// Returns the start position
+        /// </summary>
+        public Vector3 FromPosition
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Returns a value indicating whether the start position is valid or not
+        /// </summary>
+        public bool HasFromPosition
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Creates a new collision checker
         /// </summary>
         /// <param name="grabInfo">The grab informations</param>
@@ -433,6 +459,7 @@ public class LedgeSensor : MonoBehaviour
             MaxClimbDownHeight = maxClimbDownHeight;
 
             CalcTargetPosition();
+            CalcFromPosition();
             CalcIsStep();
         }
 
@@ -472,6 +499,44 @@ public class LedgeSensor : MonoBehaviour
 
             TargetPosition = targetPosition;
             HasTargetPosition = true;
+        }
+
+        /// <summary>
+        /// Perform the start position collision check
+        /// </summary>
+        private void CalcFromPosition()
+        {
+            var footPosition = GrabInfo.GrabPosition - (GrabInfo.GrabDirection * (GrabInfo.Character.radius + GrabInfo.Margin));
+            footPosition.y += GrabInfo.Margin;
+
+            var topPosition = footPosition;
+            topPosition.y += GrabInfo.Character.height - GrabInfo.Character.radius;
+
+            var bottomPosition = footPosition;
+            bottomPosition.y += GrabInfo.Character.radius + GrabInfo.Margin;
+
+            if (Physics.CheckCapsule(topPosition, bottomPosition, GrabInfo.Character.radius, CollisionLayers))
+            {
+                FromPosition = Vector3.zero;
+                HasFromPosition = false;
+                return;
+            }
+
+            Vector3 fromPosition;
+            RaycastHit hitInfo;
+            if (Physics.CapsuleCast(topPosition, bottomPosition, GrabInfo.Character.radius, Vector3.down, out hitInfo, MaxClimbDownHeight, CollisionLayers))
+            {
+                fromPosition = footPosition;
+                fromPosition.y = hitInfo.point.y;
+            }
+            else
+            {
+                fromPosition = bottomPosition;
+                fromPosition.y -= GrabInfo.Character.radius + MaxClimbDownHeight;
+            }
+
+            FromPosition = fromPosition;
+            HasFromPosition = true;
         }
 
         /// <summary>
