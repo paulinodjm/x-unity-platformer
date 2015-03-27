@@ -586,7 +586,7 @@ public class LedgeSensor : MonoBehaviour
         /// </summary>
         private void CalcIsStep()
         {
-            IsStep = Mathf.Abs(TargetPosition.y - GrabInfo.Character.transform.position.y + GrabInfo.Margin) <= GrabInfo.Character.stepOffset;
+            IsStep = Mathf.Abs(TargetPosition.y - FromPosition.y) <= GrabInfo.Character.stepOffset;
         }
     }
 }
