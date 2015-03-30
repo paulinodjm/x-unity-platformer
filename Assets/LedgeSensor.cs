@@ -11,6 +11,10 @@ public class LedgeSensor : MonoBehaviour
     [Tooltip("[0; infinite]")]
     public float MaxClimbDownHeight = 1F;
 
+    [Tooltip("The radius factor used as thresehold to detemine when the character must fall from a ledge.")]
+    [Range(0F, 1F)]
+    public float FallThresehold = 1F;
+
     [Tooltip("The layer mask used to check the collisions")]
     public LayerMask CollisionLayers;
 
@@ -73,7 +77,7 @@ public class LedgeSensor : MonoBehaviour
             Gizmos.color = new Color(0F, 0.5F, 1F, 0.5F);
             Gizmos.DrawSphere(drawPosition, _characterController.radius);
 
-            if (grabInfo.IsCrossed)
+            if (grabInfo.GrabDistance <= _characterController.radius * FallThresehold)
             {
                 Debug.DrawLine(grabInfo.Ledge.Start, grabInfo.Ledge.End, Color.red);
             }
@@ -92,7 +96,7 @@ public class LedgeSensor : MonoBehaviour
             if (!checker.HasTargetPosition || !checker.HasFromPosition || checker.IsStep)
                 continue;
 
-            var info = new GrabInfo(ledge, calculator.GrabPosition, calculator.GrabDirection, checker.FromPosition, checker.TargetPosition, calculator.IsValid, calculator.IsCrossed);
+            var info = new GrabInfo(ledge, calculator.GrabPosition, calculator.GrabDirection, checker.FromPosition, checker.TargetPosition, calculator.IsValid, calculator.GrabDistance);
             GrabInfos.Add(info);
         }
     }
@@ -168,7 +172,7 @@ public class LedgeSensor : MonoBehaviour
         /// <summary>
         /// Returns a value telling whether the character is crossing the edge or not
         /// </summary>
-        public bool IsCrossed
+        public float GrabDistance
         {
             get;
             private set;
@@ -183,8 +187,8 @@ public class LedgeSensor : MonoBehaviour
         /// <param name="fromPosition">The start position</param>
         /// <param name="targetPosition">The target position</param>
         /// <param name="isInFront">A value indicating whether the player is in front of the ledge</param>
-        /// <param name="isCrossed">A value telling whether the character is crossing the edge or not</param>
-        public GrabInfo(Ledge ledge, Vector3 grabPosition, Vector3 grabDirection, Vector3 fromPosition, Vector3 targetPosition, bool isInFront, bool isCrossed)
+        /// <param name="grabDistance">The distance to the grab position</param>
+        public GrabInfo(Ledge ledge, Vector3 grabPosition, Vector3 grabDirection, Vector3 fromPosition, Vector3 targetPosition, bool isInFront, float grabDistance)
         {
             Ledge = ledge;
             GrabPosition = grabPosition;
@@ -192,7 +196,7 @@ public class LedgeSensor : MonoBehaviour
             FromPosition = fromPosition;
             TargetPosition = targetPosition;
             IsInFront = isInFront;
-            IsCrossed = isCrossed;
+            GrabDistance = grabDistance;
         }
     }
 
@@ -239,18 +243,18 @@ public class LedgeSensor : MonoBehaviour
         }
 
         /// <summary>
-        /// Returns a value telling whether the character is crossing the edge or not. 
+        /// Returns the perpendicular direction to reach the ledge
         /// </summary>
-        public bool IsCrossed
+        public Vector3 GrabDirection
         {
             get;
             private set;
         }
 
         /// <summary>
-        /// Returns the perpendicular direction to reach the ledge
+        /// Returns the distance between the character and the grab position
         /// </summary>
-        public Vector3 GrabDirection
+        public float GrabDistance
         {
             get;
             private set;
@@ -395,18 +399,26 @@ public class LedgeSensor : MonoBehaviour
         }
 
         /// <summary>
-        /// Initialize the IsCrossed property
+        /// Initialize the GrabDistance property (and makes the object able to check if the character crosses the ledge)
         /// </summary>
         private void CalcCrossing()
         {
             if (IsValid)
             {
-                IsCrossed = Vector3.Distance(_relativePosition, _rawGrabPosition) <= Character.radius;
+                GrabDistance = Vector3.Distance(_relativePosition, _rawGrabPosition);
             }
             else
             {
-                IsCrossed = _relativePosition.magnitude <= Character.radius
-                    || Vector3.Distance(Ledge.FlatEnd - Ledge.Start, _relativePosition) <= Character.radius;
+                var ledgeEndDistance = Vector3.Distance(Ledge.FlatEnd - Ledge.Start, _relativePosition);
+
+                if (_relativePosition.magnitude < ledgeEndDistance)
+                {
+                    GrabDistance = _relativePosition.magnitude;
+                }
+                else
+                {
+                    GrabDistance = ledgeEndDistance;
+                }
             }
         }
     }
