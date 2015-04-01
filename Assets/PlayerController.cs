@@ -4,6 +4,7 @@ using System;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(InputController))]
+[RequireComponent(typeof(LedgeSensor))]
 public class PlayerController : MonoBehaviour
 {
     #region Inspector
@@ -22,6 +23,8 @@ public class PlayerController : MonoBehaviour
     private CharacterController _characterController;
 
     private InputController _inputController;
+
+    private LedgeSensor _ledgeSensor;
 
     /// <summary>
     /// Returns the current player point of view.
@@ -54,10 +57,14 @@ public class PlayerController : MonoBehaviour
     {
         _characterController = GetComponent<CharacterController>();
         _inputController = GetComponent<InputController>();
+        _ledgeSensor = GetComponent<LedgeSensor>();
     }
 	
 	void Update () 
     {
+        if (HandleFallingLedge())
+            return;
+
         var velocity = _characterController.velocity;
         CalcVelocity(ref velocity, WalkParameters);
 
@@ -137,6 +144,18 @@ public class PlayerController : MonoBehaviour
 
             velocity = velocityDirection * speed;
         }
+    }
+
+    private bool HandleFallingLedge()
+    {
+        var fallingLedge = _ledgeSensor.GetFallingLedge();
+        if (fallingLedge != null)
+        {
+            transform.position = fallingLedge.TargetPosition;
+            return true;
+        }
+
+        return false;
     }
 
     [Serializable]

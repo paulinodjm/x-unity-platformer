@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public class LedgeSensor : MonoBehaviour
 {
@@ -102,9 +103,31 @@ public class LedgeSensor : MonoBehaviour
     }
 
     /// <summary>
+    /// Returns the ledge from witch the character must fall, if any
+    /// </summary>
+    /// <returns>The ledge; null if none</returns>
+    public GrabInfo GetFallingLedge()
+    {
+        GrabInfo nearestLedge = null;
+
+        foreach (var grabInfo in GrabInfos)
+        {
+            if (grabInfo.GrabDistance <= _characterController.radius * FallThresehold)
+            {
+                if (nearestLedge == null || grabInfo.GrabDistance < nearestLedge.GrabDistance)
+                {
+                    nearestLedge = grabInfo;
+                }
+            }
+        }
+
+        return nearestLedge;
+    }
+
+    /// <summary>
     /// Holds the grab informations
     /// </summary>
-    public struct GrabInfo
+    public class GrabInfo
     {
         /// <summary>
         /// Returns the ledge
