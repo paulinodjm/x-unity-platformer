@@ -66,26 +66,33 @@ public class PlayerController : MonoBehaviour
             return;
 
         var velocity = _characterController.velocity;
-        CalcVelocity(ref velocity, WalkParameters);
+        var input = GetTransformedInput();
+        CalcVelocity(ref velocity, WalkParameters, input);
 
         velocity *= Time.deltaTime;
         velocity.y = -5;
         _characterController.Move(velocity);
 	}
 
-    private void CalcVelocity(ref Vector3 velocity, GroundedMovementsInfo parameters)
+    private TransformedInput GetTransformedInput()
     {
         Vector3 forwardAxis, strafeAxis;
         GetGroundAxis(out forwardAxis, out strafeAxis);
 
-        forwardAxis *= _inputController.Forward;
-        strafeAxis *= _inputController.Strafe;
+        return new TransformedInput()
+        {
+            Forward = forwardAxis * _inputController.Forward,
+            Strafe = strafeAxis * _inputController.Strafe,
+        };
+    }
 
+    private void CalcVelocity(ref Vector3 velocity, GroundedMovementsInfo parameters, TransformedInput input)
+    {
         float speed;
-        var desiredDirection = (forwardAxis + strafeAxis).normalized;
+        var desiredDirection = input.Direction;
         if (desiredDirection.magnitude > 0F)
         {
-            var desiredSpeed = (forwardAxis + strafeAxis).magnitude * parameters.Speed;
+            var desiredSpeed = (input.Forward + input.Strafe).magnitude * parameters.Speed;
             var strafeDirection = Vector3.Cross(desiredDirection, Vector3.up);
 
             var actualMove = Vector3.Project(velocity, desiredDirection);
@@ -156,6 +163,29 @@ public class PlayerController : MonoBehaviour
         }
 
         return false;
+    }
+
+    private class TransformedInput
+    {
+        public Vector3 Forward
+        {
+            get;
+            set;
+        }
+
+        public Vector3 Strafe
+        {
+            get;
+            set;
+        }
+
+        public Vector3 Direction
+        {
+            get
+            {
+                return (Forward + Strafe).normalized;
+            }
+        }
     }
 
     [Serializable]
