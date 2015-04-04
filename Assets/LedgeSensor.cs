@@ -29,13 +29,13 @@ public class LedgeSensor : MonoBehaviour
     /// <summary>
     /// Returns all the grab informations
     /// </summary>
-    public List<GrabInfo> GrabInfos { get; private set; }
+    public List<IGrabInfo> GrabInfos { get; private set; }
 
     private CharacterController _characterController;
 
     public LedgeSensor()
     {
-        GrabInfos = new List<GrabInfo>();
+        GrabInfos = new List<IGrabInfo>();
     }
 
     void Awake()
@@ -69,7 +69,7 @@ public class LedgeSensor : MonoBehaviour
             var drawPosition = grabInfo.TargetPosition;
             drawPosition.y += _characterController.radius;
 
-            Gizmos.color = grabInfo.IsInFront ? new Color(0F, 1F, 0F, 0.5F) : new Color(1F, 0F, 0F, 0.5F);
+            Gizmos.color = grabInfo.IsValid ? new Color(0F, 1F, 0F, 0.5F) : new Color(1F, 0F, 0F, 0.5F);
             Gizmos.DrawSphere(drawPosition, _characterController.radius);
 
             drawPosition = grabInfo.FromPosition;
@@ -97,7 +97,7 @@ public class LedgeSensor : MonoBehaviour
             if (!checker.HasTargetPosition || !checker.HasFromPosition || checker.IsStep)
                 continue;
 
-            var info = new GrabInfo(ledge, calculator.GrabPosition, calculator.GrabDirection, checker.FromPosition, checker.TargetPosition, calculator.IsValid, calculator.GrabDistance);
+            var info = new GrabInfo(ledge, calculator, checker);
             GrabInfos.Add(info);
         }
     }
@@ -106,9 +106,9 @@ public class LedgeSensor : MonoBehaviour
     /// Returns the ledge from witch the character must fall, if any
     /// </summary>
     /// <returns>The ledge; null if none</returns>
-    public GrabInfo GetFallingLedge()
+    public IGrabInfo GetFallingLedge()
     {
-        GrabInfo nearestLedge = null;
+        IGrabInfo nearestLedge = null;
 
         foreach (var grabInfo in GrabInfos)
         {
@@ -124,109 +124,187 @@ public class LedgeSensor : MonoBehaviour
         return nearestLedge;
     }
 
-    /// <summary>
-    /// Holds the grab informations
-    /// </summary>
-    public class GrabInfo
+    #region Public interfaces
+
+    public interface IGrabInfo : ILedgeGrabCalculator, IClimbPositionChecker
     {
-        /// <summary>
-        /// Returns the ledge
-        /// </summary>
+        Ledge Ledge
+        {
+            get;
+        }
+    }
+
+    public interface ILedgeGrabCalculator
+    {
+        bool IsValid
+        {
+            get;
+        }
+
+        Vector3 GrabDirection
+        {
+            get;
+        }
+
+        float GrabDistance
+        {
+            get;
+        }
+
+        Vector3 GrabPosition
+        {
+            get;
+        }
+    }
+
+    public interface IClimbPositionChecker
+    {
+        bool IsStep
+        {
+            get;
+        }
+
+        bool HasTargetPosition
+        {
+            get;
+        }
+
+        Vector3 TargetPosition
+        {
+            get;
+        }
+
+        bool HasFromPosition
+        {
+            get;
+        }
+
+        Vector3 FromPosition
+        {
+            get;
+        }
+    }
+
+    #endregion
+
+    #region Private classes
+
+    private class GrabInfo : IGrabInfo
+    {
+        public ILedgeGrabCalculator LedgeGrabCalculator
+        {
+            get;
+            private set;
+        }
+
+        public IClimbPositionChecker ClimbPositionChecker
+        {
+            get;
+            private set;
+        }
+
+        public GrabInfo(Ledge ledge, ILedgeGrabCalculator ledgeGrabCalculator, IClimbPositionChecker climbPositionChecker)
+        {
+            Ledge = ledge;
+            LedgeGrabCalculator = ledgeGrabCalculator;
+            ClimbPositionChecker = climbPositionChecker;
+        }
+
+        #region IGrabInfo Membres
+
         public Ledge Ledge
         {
             get;
             private set;
         }
 
-        /// <summary>
-        /// Returns the grab position
-        /// </summary>
-        public Vector3 GrabPosition
+        #endregion
+
+        #region ILedgeGrabCalculator Membres
+
+        public bool IsValid
         {
-            get;
-            private set;
+            get 
+            {
+                return LedgeGrabCalculator.IsValid;
+            }
         }
 
-        /// <summary>
-        /// Returns the grab direction
-        /// </summary>
         public Vector3 GrabDirection
         {
-            get;
-            private set;
+            get 
+            {
+                return LedgeGrabCalculator.GrabDirection;
+            }
         }
 
-        /// <summary>
-        /// Returns the target position
-        /// </summary>
-        public Vector3 TargetPosition
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Returns the start position
-        /// </summary>
-        public Vector3 FromPosition
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Returns a value indicating whether the player is in front of the ledge
-        /// </summary>
-        public bool IsInFront
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Returns a value indicatig whether the ledge is a simple step
-        /// </summary>
-        public bool IsStep
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Returns a value telling whether the character is crossing the edge or not
-        /// </summary>
         public float GrabDistance
         {
-            get;
-            private set;
+            get 
+            {
+                return LedgeGrabCalculator.GrabDistance;
+            }
         }
 
-        /// <summary>
-        /// Creates a new grab info
-        /// </summary>
-        /// <param name="ledge">The ledge</param>
-        /// <param name="grabPosition">The grab position</param>
-        /// <param name="grabDirection">The grab direction</param>
-        /// <param name="fromPosition">The start position</param>
-        /// <param name="targetPosition">The target position</param>
-        /// <param name="isInFront">A value indicating whether the player is in front of the ledge</param>
-        /// <param name="grabDistance">The distance to the grab position</param>
-        public GrabInfo(Ledge ledge, Vector3 grabPosition, Vector3 grabDirection, Vector3 fromPosition, Vector3 targetPosition, bool isInFront, float grabDistance)
+        public Vector3 GrabPosition
         {
-            Ledge = ledge;
-            GrabPosition = grabPosition;
-            GrabDirection = grabDirection;
-            FromPosition = fromPosition;
-            TargetPosition = targetPosition;
-            IsInFront = isInFront;
-            GrabDistance = grabDistance;
+            get 
+            {
+                return LedgeGrabCalculator.GrabPosition;
+            }
         }
+
+        #endregion
+
+        #region IClimbPositionChecker Membres
+
+        public bool IsStep
+        {
+            get 
+            {
+                return ClimbPositionChecker.IsStep;
+            }
+        }
+
+        public bool HasTargetPosition
+        {
+            get 
+            {
+                return ClimbPositionChecker.HasTargetPosition;
+            }
+        }
+
+        public Vector3 TargetPosition
+        {
+            get 
+            {
+                return ClimbPositionChecker.TargetPosition;
+            }
+        }
+
+        public bool HasFromPosition
+        {
+            get 
+            {
+                return ClimbPositionChecker.HasFromPosition;
+            }
+        }
+
+        public Vector3 FromPosition
+        {
+            get 
+            {
+                return ClimbPositionChecker.FromPosition;
+            }
+        }
+
+        #endregion
     }
 
     /// <summary>
     /// Performs the calculations to determine the grab position on a ledge
     /// </summary>
-    private class LedgeGrabCalculator
+    private class LedgeGrabCalculator : ILedgeGrabCalculator
     {
         /// <summary>
         /// Return the ledge
@@ -449,7 +527,7 @@ public class LedgeSensor : MonoBehaviour
     /// <summary>
     /// Performs the collision checks
     /// </summary>
-    private class ClimbPositionChecker
+    private class ClimbPositionChecker : IClimbPositionChecker
     {
         /// <summary>
         /// Returns the grab informations
@@ -624,4 +702,6 @@ public class LedgeSensor : MonoBehaviour
             IsStep = Mathf.Abs(TargetPosition.y - FromPosition.y) <= GrabInfo.Character.stepOffset;
         }
     }
+
+    #endregion
 }
