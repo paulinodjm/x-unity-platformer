@@ -95,9 +95,17 @@ public class LedgeSensor : MonoBehaviour
     {
         GrabInfos.Clear();
 
+        var character = new CharacterInfo()
+        {
+            Height = _characterController.height,
+            Position = transform.position,
+            Radius = _characterController.radius,
+            StepOffset = _characterController.stepOffset,
+        };
+
         foreach (var ledge in Ledges)
         {
-            var calculator = new LedgeGrabCalculator(_characterController, ledge, Margin);
+            var calculator = new LedgeGrabCalculator(ledge, character, Margin);
             var checker = new ClimbPositionChecker(calculator, CollisionLayers, MaxClimbDownHeight);
 
             if (checker.IsStep)
@@ -322,9 +330,9 @@ public class LedgeSensor : MonoBehaviour
         }
 
         /// <summary>
-        /// Returns the character
+        /// Returns the character informations
         /// </summary>
-        public CharacterController Character
+        public CharacterInfo Character
         {
             get;
             private set;
@@ -379,16 +387,16 @@ public class LedgeSensor : MonoBehaviour
         /// <summary>
         /// Creates a new calculator
         /// </summary>
-        /// <param name="character">The character</param>
         /// <param name="ledge">The ledge</param>
+        /// <param name="character">The character informations</param>
         /// <param name="margin">The margin</param>
-        public LedgeGrabCalculator(CharacterController character, Ledge ledge, float margin = 0F)
+        public LedgeGrabCalculator(Ledge ledge, CharacterInfo character, float margin = 0F)
         {
             Ledge = ledge;
             Character = character;
             Margin = margin;
 
-            _radius = Character.radius + margin;
+            _radius = Character.Radius + margin;
 
             CalcRelativePosition();
             CalcRawGrabPosition();
@@ -424,7 +432,7 @@ public class LedgeSensor : MonoBehaviour
         /// </summary>
         private void CalcRelativePosition()
         {
-            var position = Character.transform.position - Ledge.Start;
+            var position = Character.Position - Ledge.Start;
             position.y = 0;
             _relativePosition = position;
         }
@@ -629,16 +637,16 @@ public class LedgeSensor : MonoBehaviour
         /// </summary>
         private void CalcTargetPosition()
         {
-            var footPosition = GrabInfo.GrabPosition + (GrabInfo.GrabDirection * (GrabInfo.Character.radius + GrabInfo.Margin));
+            var footPosition = GrabInfo.GrabPosition + (GrabInfo.GrabDirection * (GrabInfo.Character.Radius + GrabInfo.Margin));
             footPosition.y += GrabInfo.Margin;
 
             var topPosition = footPosition;
-            topPosition.y += GrabInfo.Character.height - GrabInfo.Character.radius;
+            topPosition.y += GrabInfo.Character.Height - GrabInfo.Character.Radius;
 
             var bottomPosition = footPosition;
-            bottomPosition.y += GrabInfo.Character.radius + GrabInfo.Margin;
+            bottomPosition.y += GrabInfo.Character.Radius + GrabInfo.Margin;
 
-            if (Physics.CheckCapsule(topPosition, bottomPosition, GrabInfo.Character.radius, CollisionLayers))
+            if (Physics.CheckCapsule(topPosition, bottomPosition, GrabInfo.Character.Radius, CollisionLayers))
             {
                 TargetPosition = Vector3.zero;
                 HasTargetPosition = false;
@@ -647,7 +655,7 @@ public class LedgeSensor : MonoBehaviour
 
             Vector3 targetPosition;
             RaycastHit hitInfo;
-            if (Physics.CapsuleCast(topPosition, bottomPosition, GrabInfo.Character.radius, Vector3.down, out hitInfo, MaxClimbDownHeight, CollisionLayers))
+            if (Physics.CapsuleCast(topPosition, bottomPosition, GrabInfo.Character.Radius, Vector3.down, out hitInfo, MaxClimbDownHeight, CollisionLayers))
             {
                 targetPosition = footPosition;
                 targetPosition.y = hitInfo.point.y;
@@ -655,7 +663,7 @@ public class LedgeSensor : MonoBehaviour
             else
             {
                 targetPosition = bottomPosition;
-                targetPosition.y -= GrabInfo.Character.radius + MaxClimbDownHeight;
+                targetPosition.y -= GrabInfo.Character.Radius + MaxClimbDownHeight;
             }
 
             TargetPosition = targetPosition;
@@ -667,16 +675,16 @@ public class LedgeSensor : MonoBehaviour
         /// </summary>
         private void CalcFromPosition()
         {
-            var footPosition = GrabInfo.GrabPosition - (GrabInfo.GrabDirection * (GrabInfo.Character.radius + GrabInfo.Margin));
+            var footPosition = GrabInfo.GrabPosition - (GrabInfo.GrabDirection * (GrabInfo.Character.Radius + GrabInfo.Margin));
             footPosition.y += GrabInfo.Margin;
 
             var topPosition = footPosition;
-            topPosition.y += GrabInfo.Character.height - GrabInfo.Character.radius;
+            topPosition.y += GrabInfo.Character.Height - GrabInfo.Character.Radius;
 
             var bottomPosition = footPosition;
-            bottomPosition.y += GrabInfo.Character.radius + GrabInfo.Margin;
+            bottomPosition.y += GrabInfo.Character.Radius + GrabInfo.Margin;
 
-            if (Physics.CheckCapsule(topPosition, bottomPosition, GrabInfo.Character.radius, CollisionLayers))
+            if (Physics.CheckCapsule(topPosition, bottomPosition, GrabInfo.Character.Radius, CollisionLayers))
             {
                 FromPosition = Vector3.zero;
                 HasFromPosition = false;
@@ -685,7 +693,7 @@ public class LedgeSensor : MonoBehaviour
 
             Vector3 fromPosition;
             RaycastHit hitInfo;
-            if (Physics.CapsuleCast(topPosition, bottomPosition, GrabInfo.Character.radius, Vector3.down, out hitInfo, MaxClimbDownHeight, CollisionLayers))
+            if (Physics.CapsuleCast(topPosition, bottomPosition, GrabInfo.Character.Radius, Vector3.down, out hitInfo, MaxClimbDownHeight, CollisionLayers))
             {
                 fromPosition = footPosition;
                 fromPosition.y = hitInfo.point.y;
@@ -693,7 +701,7 @@ public class LedgeSensor : MonoBehaviour
             else
             {
                 fromPosition = bottomPosition;
-                fromPosition.y -= GrabInfo.Character.radius + MaxClimbDownHeight;
+                fromPosition.y -= GrabInfo.Character.Radius + MaxClimbDownHeight;
             }
 
             FromPosition = fromPosition;
@@ -707,12 +715,54 @@ public class LedgeSensor : MonoBehaviour
         {
             if (HasFromPosition && HasTargetPosition)
             {
-                IsStep = Mathf.Abs(TargetPosition.y - FromPosition.y) <= GrabInfo.Character.stepOffset;
+                IsStep = Mathf.Abs(TargetPosition.y - FromPosition.y) <= GrabInfo.Character.StepOffset;
             }
             else
             {
                 IsStep = false;
             }
+        }
+    }
+
+    /// <summary>
+    /// Hold the character informations
+    /// </summary>
+    private class CharacterInfo
+    {
+        /// <summary>
+        /// Get or set the character position
+        /// </summary>
+        public Vector3 Position
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Get or set the character radius
+        /// </summary>
+        public float Radius
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Get or set the character height
+        /// </summary>
+        public float Height
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Get or set the step offset
+        /// </summary>
+        public float StepOffset
+        {
+            get;
+            set;
         }
     }
 
