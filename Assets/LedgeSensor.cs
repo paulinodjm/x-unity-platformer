@@ -66,17 +66,23 @@ public class LedgeSensor : MonoBehaviour
 
         foreach (var grabInfo in GrabInfos)
         {
-            var drawPosition = grabInfo.TargetPosition;
-            drawPosition.y += _characterController.radius;
+            if (grabInfo.HasTargetPosition)
+            {
+                var drawPosition = grabInfo.TargetPosition;
+                drawPosition.y += _characterController.radius;
 
-            Gizmos.color = grabInfo.IsValid ? new Color(0F, 1F, 0F, 0.5F) : new Color(1F, 0F, 0F, 0.5F);
-            Gizmos.DrawSphere(drawPosition, _characterController.radius);
+                Gizmos.color = grabInfo.IsValid ? new Color(0F, 1F, 0F, 0.5F) : new Color(1F, 0F, 0F, 0.5F);
+                Gizmos.DrawSphere(drawPosition, _characterController.radius);
+            }
 
-            drawPosition = grabInfo.FromPosition;
-            drawPosition.y += _characterController.radius;
+            if (grabInfo.HasFromPosition)
+            {
+                var drawPosition = grabInfo.FromPosition;
+                drawPosition.y += _characterController.radius;
 
-            Gizmos.color = new Color(0F, 0.5F, 1F, 0.5F);
-            Gizmos.DrawSphere(drawPosition, _characterController.radius);
+                Gizmos.color = new Color(0F, 0.5F, 1F, 0.5F);
+                Gizmos.DrawSphere(drawPosition, _characterController.radius);
+            }
 
             if (grabInfo.GrabDistance <= _characterController.radius * FallThresehold)
             {
@@ -94,7 +100,7 @@ public class LedgeSensor : MonoBehaviour
             var calculator = new LedgeGrabCalculator(_characterController, ledge, Margin);
             var checker = new ClimbPositionChecker(calculator, CollisionLayers, MaxClimbDownHeight);
 
-            if (!checker.HasTargetPosition || !checker.HasFromPosition || checker.IsStep)
+            if (checker.IsStep)
                 continue;
 
             var info = new GrabInfo(ledge, calculator, checker);
@@ -699,7 +705,14 @@ public class LedgeSensor : MonoBehaviour
         /// </summary>
         private void CalcIsStep()
         {
-            IsStep = Mathf.Abs(TargetPosition.y - FromPosition.y) <= GrabInfo.Character.stepOffset;
+            if (HasFromPosition && HasTargetPosition)
+            {
+                IsStep = Mathf.Abs(TargetPosition.y - FromPosition.y) <= GrabInfo.Character.stepOffset;
+            }
+            else
+            {
+                IsStep = false;
+            }
         }
     }
 
