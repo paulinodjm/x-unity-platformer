@@ -9,6 +9,10 @@ public class PlayerAnimationController : MonoBehaviour
 
     public string GroundedParameter = "Grounded";
 
+    public string ClimbOnState = "ClimbOn";
+
+    public float TransitionDuration = 0F;
+
     [Range(0, 1)]
     public float RotationLerpFactor = 0.5F;
 
@@ -31,5 +35,18 @@ public class PlayerAnimationController : MonoBehaviour
         {
             transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(velocity), RotationLerpFactor);
         }
+    }
+
+    public void SetLedgeAnimation(LedgeSensor.IGrabInfo ledge)
+    {
+        if (!ledge.HasFromPosition || !ledge.HasTargetPosition)
+            return;
+
+        var deltaHeight = ledge.TargetPosition.y - ledge.FromPosition.y;
+        if (deltaHeight <= 0F)
+            return;
+
+        _animator.CrossFade(ClimbOnState, TransitionDuration);
+        transform.rotation = Quaternion.LookRotation(ledge.PerpendicularGrabDirection);
     }
 }

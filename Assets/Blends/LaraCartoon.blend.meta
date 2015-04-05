@@ -681,8 +681,6 @@ ModelImporter:
       transformMask:
       - path: 
         weight: 1
-      - path: Cube
-        weight: 1
       - path: LaraCroft
         weight: 1
       - path: LaraCroft_Armature
@@ -704,15 +702,15 @@ ModelImporter:
       - path: LaraCroft_Armature/LowerBody/UpperBody/Head
         weight: 1
       - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerHair
-        weight: 1
+        weight: 0
       - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerHair/MiddleAir
-        weight: 1
+        weight: 0
       - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerHair/MiddleAir/UpperHair
-        weight: 1
+        weight: 0
       - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerPonyTail
-        weight: 1
+        weight: 0
       - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerPonyTail/UpperPonyTail
-        weight: 1
+        weight: 0
       - path: LaraCroft_Armature/Root
         weight: 1
       maskType: 0

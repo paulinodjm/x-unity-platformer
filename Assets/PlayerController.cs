@@ -199,6 +199,7 @@ public class PlayerController : MonoBehaviour
         var fallingLedge = _ledgeSensor.GetFallingLedge();
         if (fallingLedge != null)
         {
+            _animationController.SetLedgeAnimation(fallingLedge);
             transform.position = fallingLedge.TargetPosition;
             return true;
         }
