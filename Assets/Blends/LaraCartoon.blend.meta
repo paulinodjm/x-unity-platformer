@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: b594cfe816b97184c805d40a85a0855c
 ModelImporter:
-  serializedVersion: 16
+  serializedVersion: 18
   fileIDToRecycleName:
     100000: Cube
     100002: Cube_001
@@ -135,6 +135,7 @@ ModelImporter:
     7400010: PickupGround
     7400012: UseKey
     7400014: Jump
+    7400016: ClimbOn
     9500000: //RootNode
     11100000: //RootNode
     13700000: LaraCroft
@@ -146,6 +147,7 @@ ModelImporter:
     legacyGenerateAnimations: 3
     bakeSimulation: 0
     optimizeGameObjects: 0
+    motionNodeName: 
     animationCompression: 3
     animationRotationError: .5
     animationPositionError: .5
@@ -653,6 +655,68 @@ ModelImporter:
         weight: 1
       maskType: 0
       maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: ClimbOn
+      takeName: ClimbOn
+      firstFrame: 0
+      lastFrame: 81
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Cube
+        weight: 1
+      - path: LaraCroft
+        weight: 1
+      - path: LaraCroft_Armature
+        weight: 1
+      - path: LaraCroft_Armature/CameraTarget
+        weight: 1
+      - path: LaraCroft_Armature/Foot_L
+        weight: 1
+      - path: LaraCroft_Armature/Foot_R
+        weight: 1
+      - path: LaraCroft_Armature/Hand_L
+        weight: 1
+      - path: LaraCroft_Armature/Hand_R
+        weight: 1
+      - path: LaraCroft_Armature/LowerBody
+        weight: 1
+      - path: LaraCroft_Armature/LowerBody/UpperBody
+        weight: 1
+      - path: LaraCroft_Armature/LowerBody/UpperBody/Head
+        weight: 1
+      - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerHair
+        weight: 1
+      - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerHair/MiddleAir
+        weight: 1
+      - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerHair/MiddleAir/UpperHair
+        weight: 1
+      - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerPonyTail
+        weight: 1
+      - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerPonyTail/UpperPonyTail
+        weight: 1
+      - path: LaraCroft_Armature/Root
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
     isReadable: 1
   meshes:
     lODScreenPercentages: []
@@ -664,11 +728,13 @@ ModelImporter:
     generateSecondaryUV: 0
     useFileUnits: 1
     optimizeMeshForGPU: 1
+    keepQuads: 0
     weldVertices: 1
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
+    useFileScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     splitTangentsAcrossUV: 1
@@ -691,3 +757,5 @@ ModelImporter:
   animationType: 2
   additionalBone: 0
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 
