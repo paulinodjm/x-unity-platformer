@@ -120,7 +120,17 @@ public class LedgeSensor : MonoBehaviour
 
         foreach (var grabInfo in GrabInfos)
         {
-            if (grabInfo.TrueGrabDistance < _characterController.radius * FallThresehold)
+            if (!grabInfo.HasTargetPosition)
+                continue;
+
+            var deltaHeight = 0F;
+            if (grabInfo.HasFromPosition)
+            {
+                deltaHeight = grabInfo.TargetPosition.y - grabInfo.FromPosition.y;
+            }
+
+            if (grabInfo.TrueGrabDistance < _characterController.radius * FallThresehold
+             || (grabInfo.IsValid && grabInfo.TrueGrabDistance < _characterController.radius && deltaHeight > 0F))
             {
                 if (nearestLedge == null || grabInfo.TrueGrabDistance < nearestLedge.TrueGrabDistance)
                 {
