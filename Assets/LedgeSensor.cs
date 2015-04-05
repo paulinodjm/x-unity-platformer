@@ -84,7 +84,7 @@ public class LedgeSensor : MonoBehaviour
                 Gizmos.DrawSphere(drawPosition, _characterController.radius);
             }
 
-            if (grabInfo.GrabDistance <= _characterController.radius * FallThresehold)
+            if (grabInfo.TrueGrabDistance <= _characterController.radius * FallThresehold)
             {
                 Debug.DrawLine(grabInfo.Ledge.Start, grabInfo.Ledge.End, Color.red);
             }
@@ -95,13 +95,7 @@ public class LedgeSensor : MonoBehaviour
     {
         GrabInfos.Clear();
 
-        var character = new CharacterInfo()
-        {
-            Height = _characterController.height,
-            Position = transform.position,
-            Radius = _characterController.radius,
-            StepOffset = _characterController.stepOffset,
-        };
+        var character = CreateCharacterInfo(transform.position);
 
         foreach (var ledge in Ledges)
         {
@@ -126,9 +120,9 @@ public class LedgeSensor : MonoBehaviour
 
         foreach (var grabInfo in GrabInfos)
         {
-            if (grabInfo.GrabDistance <= _characterController.radius * FallThresehold)
+            if (grabInfo.TrueGrabDistance < _characterController.radius * FallThresehold)
             {
-                if (nearestLedge == null || grabInfo.GrabDistance < nearestLedge.GrabDistance)
+                if (nearestLedge == null || grabInfo.TrueGrabDistance < nearestLedge.TrueGrabDistance)
                 {
                     nearestLedge = grabInfo;
                 }
@@ -136,6 +130,43 @@ public class LedgeSensor : MonoBehaviour
         }
 
         return nearestLedge;
+    }
+
+    public void ConstraintMove(ref Vector3 move, Vector3 desiredDirection)
+    {
+        var character = CreateCharacterInfo(Vector3.zero);
+        var radius = _characterController.radius * FallThresehold + Margin;
+
+        foreach (var grabInfo in GrabInfos)
+        {
+            var nextPosition = transform.position + move;
+            character.Position = nextPosition;
+
+            var nextledgeGrab = new LedgeGrabCalculator(grabInfo.Ledge, character, Margin);
+
+            var overlap = nextledgeGrab.TrueGrabDistance - radius;
+            if (overlap < 0F)
+            {
+                move += nextledgeGrab.TrueGrabDirection.normalized * overlap;
+                character.Position = transform.position + move;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Creates a character info instance for the given position
+    /// </summary>
+    /// <param name="position">The character position</param>
+    /// <returns>The character info</returns>
+    private CharacterInfo CreateCharacterInfo(Vector3 position)
+    {
+        return new CharacterInfo()
+        {
+            Height = _characterController.height,
+            Position = position,
+            Radius = _characterController.radius,
+            StepOffset = _characterController.stepOffset,
+        };
     }
 
     #region Public interfaces
@@ -155,12 +186,22 @@ public class LedgeSensor : MonoBehaviour
             get;
         }
 
-        Vector3 GrabDirection
+        Vector3 PerpendicularGrabDirection
         {
             get;
         }
 
-        float GrabDistance
+        float PerpendicularGrabDistance
+        {
+            get;
+        }
+
+        Vector3 TrueGrabDirection
+        {
+            get;
+        }
+
+        float TrueGrabDistance
         {
             get;
         }
@@ -238,33 +279,49 @@ public class LedgeSensor : MonoBehaviour
 
         public bool IsValid
         {
-            get 
+            get
             {
                 return LedgeGrabCalculator.IsValid;
             }
         }
 
-        public Vector3 GrabDirection
+        public Vector3 PerpendicularGrabDirection
         {
-            get 
+            get
             {
-                return LedgeGrabCalculator.GrabDirection;
+                return LedgeGrabCalculator.PerpendicularGrabDirection;
             }
         }
 
-        public float GrabDistance
+        public float TrueGrabDistance
         {
-            get 
+            get
             {
-                return LedgeGrabCalculator.GrabDistance;
+                return LedgeGrabCalculator.TrueGrabDistance;
             }
         }
 
         public Vector3 GrabPosition
         {
-            get 
+            get
             {
                 return LedgeGrabCalculator.GrabPosition;
+            }
+        }
+
+        public float PerpendicularGrabDistance
+        {
+            get
+            {
+                return LedgeGrabCalculator.PerpendicularGrabDistance;
+            }
+        }
+
+        public Vector3 TrueGrabDirection
+        {
+            get
+            {
+                return LedgeGrabCalculator.TrueGrabDirection;
             }
         }
 
@@ -274,7 +331,7 @@ public class LedgeSensor : MonoBehaviour
 
         public bool IsStep
         {
-            get 
+            get
             {
                 return ClimbPositionChecker.IsStep;
             }
@@ -282,7 +339,7 @@ public class LedgeSensor : MonoBehaviour
 
         public bool HasTargetPosition
         {
-            get 
+            get
             {
                 return ClimbPositionChecker.HasTargetPosition;
             }
@@ -290,7 +347,7 @@ public class LedgeSensor : MonoBehaviour
 
         public Vector3 TargetPosition
         {
-            get 
+            get
             {
                 return ClimbPositionChecker.TargetPosition;
             }
@@ -298,7 +355,7 @@ public class LedgeSensor : MonoBehaviour
 
         public bool HasFromPosition
         {
-            get 
+            get
             {
                 return ClimbPositionChecker.HasFromPosition;
             }
@@ -306,7 +363,7 @@ public class LedgeSensor : MonoBehaviour
 
         public Vector3 FromPosition
         {
-            get 
+            get
             {
                 return ClimbPositionChecker.FromPosition;
             }
@@ -360,7 +417,7 @@ public class LedgeSensor : MonoBehaviour
         /// <summary>
         /// Returns the perpendicular direction to reach the ledge
         /// </summary>
-        public Vector3 GrabDirection
+        public Vector3 PerpendicularGrabDirection
         {
             get;
             private set;
@@ -369,7 +426,7 @@ public class LedgeSensor : MonoBehaviour
         /// <summary>
         /// Returns the distance between the character and the grab position
         /// </summary>
-        public float GrabDistance
+        public float TrueGrabDistance
         {
             get;
             private set;
@@ -379,6 +436,18 @@ public class LedgeSensor : MonoBehaviour
         /// Returns the grab position
         /// </summary>
         public Vector3 GrabPosition
+        {
+            get;
+            private set;
+        }
+
+        public float PerpendicularGrabDistance
+        {
+            get;
+            private set;
+        }
+
+        public Vector3 TrueGrabDirection
         {
             get;
             private set;
@@ -450,7 +519,10 @@ public class LedgeSensor : MonoBehaviour
         /// </summary>
         private void CalcGrabDirection()
         {
-            GrabDirection = (_rawGrabPosition - _relativePosition).normalized;
+            var grabVector = _rawGrabPosition - _relativePosition;
+
+            PerpendicularGrabDirection = grabVector.normalized;
+            PerpendicularGrabDistance = grabVector.magnitude;
         }
 
         /// <summary>
@@ -520,7 +592,8 @@ public class LedgeSensor : MonoBehaviour
         {
             if (IsValid)
             {
-                GrabDistance = Vector3.Distance(_relativePosition, _rawGrabPosition);
+                TrueGrabDistance = Vector3.Distance(_relativePosition, _rawGrabPosition);
+                TrueGrabDirection = (_rawGrabPosition - _relativePosition).normalized;
             }
             else
             {
@@ -528,11 +601,13 @@ public class LedgeSensor : MonoBehaviour
 
                 if (_relativePosition.magnitude < ledgeEndDistance)
                 {
-                    GrabDistance = _relativePosition.magnitude;
+                    TrueGrabDistance = _relativePosition.magnitude;
+                    TrueGrabDirection = -_relativePosition.normalized;
                 }
                 else
                 {
-                    GrabDistance = ledgeEndDistance;
+                    TrueGrabDistance = ledgeEndDistance;
+                    TrueGrabDirection = (Ledge.FlatEnd - Ledge.Start - _relativePosition).normalized;
                 }
             }
         }
@@ -637,7 +712,7 @@ public class LedgeSensor : MonoBehaviour
         /// </summary>
         private void CalcTargetPosition()
         {
-            var footPosition = GrabInfo.GrabPosition + (GrabInfo.GrabDirection * (GrabInfo.Character.Radius + GrabInfo.Margin));
+            var footPosition = GrabInfo.GrabPosition + (GrabInfo.PerpendicularGrabDirection * (GrabInfo.Character.Radius + GrabInfo.Margin));
             footPosition.y += GrabInfo.Margin;
 
             var topPosition = footPosition;
@@ -675,7 +750,7 @@ public class LedgeSensor : MonoBehaviour
         /// </summary>
         private void CalcFromPosition()
         {
-            var footPosition = GrabInfo.GrabPosition - (GrabInfo.GrabDirection * (GrabInfo.Character.Radius + GrabInfo.Margin));
+            var footPosition = GrabInfo.GrabPosition - (GrabInfo.PerpendicularGrabDirection * (GrabInfo.Character.Radius + GrabInfo.Margin));
             footPosition.y += GrabInfo.Margin;
 
             var topPosition = footPosition;

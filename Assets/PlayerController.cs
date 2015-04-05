@@ -70,6 +70,8 @@ public class PlayerController : MonoBehaviour
         CalcVelocity(ref velocity, WalkParameters, input);
 
         velocity *= Time.deltaTime;
+        _ledgeSensor.ConstraintMove(ref velocity, input.Direction);
+
         velocity.y = -5;
         _characterController.Move(velocity);
 	}
