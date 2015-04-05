@@ -11,6 +11,7 @@ public class InputController : MonoBehaviour
         Forward = "Vertical",
         Strafe = "Horizontal",
         HoldWalk = "Walk",
+        Jump = "Jump",
     };
 
     [Tooltip("The \"walk\" speed factor")]
@@ -37,6 +38,15 @@ public class InputController : MonoBehaviour
         private set;
     }
 
+    /// <summary>
+    /// Returns a value indicating whether the player wants to jump
+    /// </summary>
+    public bool Jump
+    {
+        get;
+        private set;
+    }
+
     void Update()
     {
         var inputs = new Vector2(
@@ -56,6 +66,7 @@ public class InputController : MonoBehaviour
 
         Forward = inputs.x;
         Strafe = inputs.y;
+        Jump = Input.GetButtonDown(AxisNames.Jump);
     }
 
     [Serializable]
@@ -69,5 +80,8 @@ public class InputController : MonoBehaviour
 
         [Tooltip("The \"walk\" button name")]
         public string HoldWalk;
+
+        [Tooltip("The \"jump\" button name")]
+        public string Jump;
     }
 }

@@ -15,8 +15,20 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Walk parameters")]
     public GroundedMovementsInfo WalkParameters = new GroundedMovementsInfo()
     {
-        Speed = 5F
+        Speed = 5F,
     };
+
+    [Tooltip("Fall parameters")]
+    public GroundedMovementsInfo FallParameters = new GroundedMovementsInfo()
+    {
+        Speed = 5F,
+    };
+
+    [Tooltip("The gravity [0; infinity]")]
+    public float Gravity;
+
+    [Tooltip("The jump force [0; infinity]")]
+    public float JumpForce;
 
     #endregion
 
@@ -62,17 +74,33 @@ public class PlayerController : MonoBehaviour
 	
 	void Update () 
     {
-        if (HandleFallingLedge())
+        if (_characterController.isGrounded && HandleFallingLedge())
             return;
 
         var velocity = _characterController.velocity;
         var input = GetTransformedInput();
-        CalcVelocity(ref velocity, WalkParameters, input);
+
+        var parameters = _characterController.isGrounded ? WalkParameters : FallParameters;
+        CalcVelocity(ref velocity, parameters, input);
 
         velocity *= Time.deltaTime;
-        _ledgeSensor.ConstraintMove(ref velocity, input.Direction);
 
-        velocity.y = -5;
+        if (_characterController.isGrounded)
+        {
+            if (_inputController.Jump)
+            {
+                velocity.y = JumpForce * Time.deltaTime;
+            }
+            else
+            {
+                _ledgeSensor.ConstraintMove(ref velocity, input.Direction);
+                velocity.y = -5;
+            }
+        }
+        else
+        {
+            velocity.y -= Gravity * Time.deltaTime;
+        }
         _characterController.Move(velocity);
 	}
 
@@ -90,6 +118,7 @@ public class PlayerController : MonoBehaviour
 
     private void CalcVelocity(ref Vector3 velocity, GroundedMovementsInfo parameters, TransformedInput input)
     {
+        Vector3 horizontalVelocity;
         float speed;
         var desiredDirection = input.Direction;
         if (desiredDirection.magnitude > 0F)
@@ -138,7 +167,7 @@ public class PlayerController : MonoBehaviour
             }
 
             // -> net velocity
-            velocity = actualMove + actualStrafe;
+            horizontalVelocity = actualMove + actualStrafe;
         }
         else
         {
@@ -151,8 +180,10 @@ public class PlayerController : MonoBehaviour
                 speed = 0F;
             }
 
-            velocity = velocityDirection * speed;
+            horizontalVelocity = velocityDirection * speed;
         }
+
+        velocity = new Vector3(horizontalVelocity.x, velocity.y, horizontalVelocity.z);
     }
 
     private bool HandleFallingLedge()
