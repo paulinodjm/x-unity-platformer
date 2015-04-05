@@ -16,6 +16,10 @@ public class LedgeSensor : MonoBehaviour
     [Range(0F, 1F)]
     public float FallThresehold = 1F;
 
+    [Tooltip("The minimum angle required to pass through a ledge")]
+    [Range(0F, 90F)]
+    public float LedgeBreakAngle = 45F;
+
     [Tooltip("The layer mask used to check the collisions")]
     public LayerMask CollisionLayers;
 
@@ -113,11 +117,17 @@ public class LedgeSensor : MonoBehaviour
 
     public void ConstraintMove(ref Vector3 move, Vector3 desiredDirection)
     {
+        var ledgeBreakValue = Mathf.Sin(LedgeBreakAngle * Mathf.Deg2Rad);
+
         var character = CreateCharacterInfo(Vector3.zero);
         var radius = _characterController.radius * FallThresehold + Margin;
 
         foreach (var grabInfo in GrabInfos)
         {
+            var inputProjection = Vector3.Project(desiredDirection, grabInfo.PerpendicularGrabDirection);
+            if (inputProjection.magnitude >= ledgeBreakValue)
+                continue;
+
             var nextPosition = transform.position + move;
             character.Position = nextPosition;
 
