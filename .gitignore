@@ -13,3 +13,5 @@ Library
 *.pidb
 
 obj/
+*.blend?
+*.blend?.meta
