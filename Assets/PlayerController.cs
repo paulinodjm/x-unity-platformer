@@ -38,6 +38,8 @@ public class PlayerController : MonoBehaviour
 
     private LedgeSensor _ledgeSensor;
 
+    private PlayerAnimationController _animationController;
+
     /// <summary>
     /// Returns the current player point of view.
     /// </summary>
@@ -70,6 +72,7 @@ public class PlayerController : MonoBehaviour
         _characterController = GetComponent<CharacterController>();
         _inputController = GetComponent<InputController>();
         _ledgeSensor = GetComponent<LedgeSensor>();
+        _animationController = GetComponent<PlayerAnimationController>();
     }
 	
 	void Update () 
@@ -102,6 +105,11 @@ public class PlayerController : MonoBehaviour
             velocity.y -= Gravity * Time.deltaTime;
         }
         _characterController.Move(velocity);
+
+        _animationController.UpdateAnimation(
+            (_characterController.isGrounded) ? input.Move : _characterController.velocity.normalized, 
+            _characterController.isGrounded
+        );
 	}
 
     private TransformedInput GetTransformedInput()
@@ -216,7 +224,15 @@ public class PlayerController : MonoBehaviour
         {
             get
             {
-                return (Forward + Strafe).normalized;
+                return Move.normalized;
+            }
+        }
+
+        public Vector3 Move
+        {
+            get
+            {
+                return Forward + Strafe;
             }
         }
     }
