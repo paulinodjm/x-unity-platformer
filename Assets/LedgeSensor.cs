@@ -60,37 +60,6 @@ public class LedgeSensor : MonoBehaviour
         Ledges.Remove(ledge);
     }
 
-    void OnDrawGizmos()
-    {
-        Gizmos.matrix = Matrix4x4.identity;
-
-        foreach (var grabInfo in GrabInfos)
-        {
-            if (grabInfo.HasTargetPosition)
-            {
-                var drawPosition = grabInfo.TargetPosition;
-                drawPosition.y += _characterController.radius;
-
-                Gizmos.color = grabInfo.IsValid ? new Color(0F, 1F, 0F, 0.5F) : new Color(1F, 0F, 0F, 0.5F);
-                Gizmos.DrawSphere(drawPosition, _characterController.radius);
-            }
-
-            if (grabInfo.HasFromPosition)
-            {
-                var drawPosition = grabInfo.FromPosition;
-                drawPosition.y += _characterController.radius;
-
-                Gizmos.color = new Color(0F, 0.5F, 1F, 0.5F);
-                Gizmos.DrawSphere(drawPosition, _characterController.radius);
-            }
-
-            if (grabInfo.TrueGrabDistance <= _characterController.radius * FallThresehold)
-            {
-                Debug.DrawLine(grabInfo.Ledge.Start, grabInfo.Ledge.End, Color.red);
-            }
-        }
-    }
-
     void Update()
     {
         GrabInfos.Clear();
