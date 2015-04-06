@@ -701,37 +701,11 @@ public class LedgeSensor : MonoBehaviour
         /// </summary>
         private void CalcTargetPosition()
         {
-            var footPosition = GrabInfo.GrabPosition + (GrabInfo.PerpendicularGrabDirection * (GrabInfo.Character.Radius + GrabInfo.Margin));
-            footPosition.y += GrabInfo.Margin;
-
-            var topPosition = footPosition;
-            topPosition.y += GrabInfo.Character.Height - GrabInfo.Character.Radius;
-
-            var bottomPosition = footPosition;
-            bottomPosition.y += GrabInfo.Character.Radius + GrabInfo.Margin;
-
-            if (Physics.CheckCapsule(topPosition, bottomPosition, GrabInfo.Character.Radius, CollisionLayers))
-            {
-                TargetPosition = Vector3.zero;
-                HasTargetPosition = false;
-                return;
-            }
-
             Vector3 targetPosition;
-            RaycastHit hitInfo;
-            if (Physics.CapsuleCast(topPosition, bottomPosition, GrabInfo.Character.Radius, Vector3.down, out hitInfo, MaxClimbDownHeight, CollisionLayers))
-            {
-                targetPosition = footPosition;
-                targetPosition.y = hitInfo.point.y;
-            }
-            else
-            {
-                targetPosition = bottomPosition;
-                targetPosition.y -= GrabInfo.Character.Radius + MaxClimbDownHeight;
-            }
+            var offset = GrabInfo.PerpendicularGrabDirection * (GrabInfo.Character.Radius + GrabInfo.Margin);
 
+            HasTargetPosition = PerformCapsuleCheck(out targetPosition, offset);
             TargetPosition = targetPosition;
-            HasTargetPosition = true;
         }
 
         /// <summary>
@@ -739,7 +713,16 @@ public class LedgeSensor : MonoBehaviour
         /// </summary>
         private void CalcFromPosition()
         {
-            var footPosition = GrabInfo.GrabPosition - (GrabInfo.PerpendicularGrabDirection * (GrabInfo.Character.Radius + GrabInfo.Margin));
+            Vector3 fromPosition;
+            var offset = -GrabInfo.PerpendicularGrabDirection * (GrabInfo.Character.Radius + GrabInfo.Margin);
+
+            HasFromPosition = PerformCapsuleCheck(out fromPosition, offset);
+            FromPosition = fromPosition;
+        }
+
+        private bool PerformCapsuleCheck(out Vector3 position, Vector3 offset)
+        {
+            var footPosition = GrabInfo.GrabPosition + offset;
             footPosition.y += GrabInfo.Margin;
 
             var topPosition = footPosition;
@@ -750,26 +733,23 @@ public class LedgeSensor : MonoBehaviour
 
             if (Physics.CheckCapsule(topPosition, bottomPosition, GrabInfo.Character.Radius, CollisionLayers))
             {
-                FromPosition = Vector3.zero;
-                HasFromPosition = false;
-                return;
+                position = Vector3.zero;
+                return false;
             }
 
-            Vector3 fromPosition;
             RaycastHit hitInfo;
             if (Physics.CapsuleCast(topPosition, bottomPosition, GrabInfo.Character.Radius, Vector3.down, out hitInfo, MaxClimbDownHeight, CollisionLayers))
             {
-                fromPosition = footPosition;
-                fromPosition.y = hitInfo.point.y;
+                position = footPosition;
+                position.y = hitInfo.point.y;
             }
             else
             {
-                fromPosition = bottomPosition;
-                fromPosition.y -= GrabInfo.Character.Radius + MaxClimbDownHeight;
+                position = bottomPosition;
+                position.y -= GrabInfo.Character.Radius + MaxClimbDownHeight;
             }
 
-            FromPosition = fromPosition;
-            HasFromPosition = true;
+            return true;
         }
 
         /// <summary>
