@@ -154,6 +154,7 @@ public class LedgeSensor : MonoBehaviour
             Height = _characterController.height,
             Position = position,
             Radius = _characterController.radius,
+            FallRadiusFactor = FallThresehold,
             StepOffset = _characterController.stepOffset,
         };
     }
@@ -691,15 +692,16 @@ public class LedgeSensor : MonoBehaviour
             CollisionLayers = collisionLayers;
             MaxClimbDownHeight = maxClimbDownHeight;
 
-            CalcTargetPosition();
-            CalcFromPosition();
+            CalcFirstChangeTargetPosition();
+            CalcFirstChangeFromPosition();
+            CalcPositions();
             CalcIsStep();
         }
 
         /// <summary>
         /// Perform the target position check
         /// </summary>
-        private void CalcTargetPosition()
+        private void CalcFirstChangeTargetPosition()
         {
             Vector3 targetPosition;
             var offset = GrabInfo.PerpendicularGrabDirection * (GrabInfo.Character.Radius + GrabInfo.Margin);
@@ -711,13 +713,68 @@ public class LedgeSensor : MonoBehaviour
         /// <summary>
         /// Perform the start position collision check
         /// </summary>
-        private void CalcFromPosition()
+        private void CalcFirstChangeFromPosition()
         {
             Vector3 fromPosition;
             var offset = -GrabInfo.PerpendicularGrabDirection * (GrabInfo.Character.Radius + GrabInfo.Margin);
 
             HasFromPosition = PerformCapsuleCheck(out fromPosition, offset);
             FromPosition = fromPosition;
+        }
+
+        private void CalcPositions()
+        {
+            Vector3 position;
+            var offset = GrabInfo.PerpendicularGrabDirection * (GrabInfo.Character.FallRadius + GrabInfo.Margin);
+
+            if (HasFromPosition && HasTargetPosition)
+            {
+                if (TargetPosition.y > FromPosition.y)
+                {
+                    HasTargetPosition = PerformCapsuleCheck(out position, offset);
+                    TargetPosition = position;
+                }
+                else
+                {
+                    HasFromPosition = PerformCapsuleCheck(out position, -offset);
+                    FromPosition = position;
+                }
+            }
+            else if (!HasFromPosition && !HasTargetPosition)
+            {
+                HasFromPosition = PerformCapsuleCheck(out position, -offset);
+                FromPosition = position;
+
+                if (!HasTargetPosition)
+                {
+                    HasTargetPosition = PerformCapsuleCheck(out position, offset);
+                    TargetPosition = position;
+                }
+                return;
+            }
+            else
+            {
+                if (PerformCapsuleCheck(out position, offset))
+                {
+                    if (!HasTargetPosition || position.y <= TargetPosition.y)
+                    {
+                        HasTargetPosition = true;
+                        TargetPosition = position;
+                    }
+                }
+                else if (PerformCapsuleCheck(out position, -offset))
+                {
+                    if (!HasFromPosition || position.y <= FromPosition.y)
+                    {
+                        HasFromPosition = true;
+                        FromPosition = position;
+                    }
+                }
+                else
+                {
+                    // nothing to do, both are checked
+                }
+            }
         }
 
         private bool PerformCapsuleCheck(out Vector3 position, Vector3 offset)
@@ -792,6 +849,15 @@ public class LedgeSensor : MonoBehaviour
         }
 
         /// <summary>
+        /// Get or set the fall radius factor
+        /// </summary>
+        public float FallRadiusFactor
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Get or set the character height
         /// </summary>
         public float Height
@@ -807,6 +873,17 @@ public class LedgeSensor : MonoBehaviour
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Returns the fall radius
+        /// </summary>
+        public float FallRadius
+        {
+            get
+            {
+                return Radius * FallRadiusFactor;
+            }
         }
     }
 
