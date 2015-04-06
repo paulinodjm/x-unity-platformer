@@ -30,6 +30,9 @@ public class PlayerController : MonoBehaviour
     [Tooltip("The jump force [0; infinity]")]
     public float JumpForce;
 
+    [Tooltip("The maximum height the character can climb off without falling")]
+    public float MaxClimbDownHeight;
+
     #endregion
 
     private CharacterController _characterController;
@@ -81,7 +84,7 @@ public class PlayerController : MonoBehaviour
     {
         if (_isFrozen)
         {
-            _characterController.Move(new Vector3(0, -5, 0));
+            _characterController.Move(new Vector3(0, -0.000001F, 0));
             return;
         }
 
@@ -212,14 +215,60 @@ public class PlayerController : MonoBehaviour
         var fallingLedge = _ledgeSensor.GetFallingLedge();
         if (fallingLedge != null)
         {
-            _animationController.SetLedgeAnimation(fallingLedge);
-            transform.position = fallingLedge.TargetPosition;
-            
-            if (fallingLedge.TargetPosition.y > fallingLedge.FromPosition.y)
+            var rotationProjection = Vector3.Project(transform.forward, fallingLedge.PerpendicularGrabDirection);
+
+            Vector3 targetPosition, direction;
+            float ledgeHeight;
+            if (rotationProjection.normalized == fallingLedge.PerpendicularGrabDirection)
             {
-                _characterController.Move(Vector3.zero);
+                if (fallingLedge.HasTargetPosition)
+                {
+                    targetPosition = fallingLedge.TargetPosition;
+                    direction = fallingLedge.PerpendicularGrabDirection;
+                    ledgeHeight = fallingLedge.HasFromPosition ? fallingLedge.TargetPosition.y - fallingLedge.FromPosition.y : 0F;
+                }
+                else if (fallingLedge.HasFromPosition)
+                {
+                    targetPosition = fallingLedge.FromPosition;
+                    direction = -fallingLedge.PerpendicularGrabDirection;
+                    ledgeHeight = 0F;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (fallingLedge.HasFromPosition)
+                {
+                    targetPosition = fallingLedge.FromPosition;
+                    direction = -fallingLedge.PerpendicularGrabDirection;
+                    ledgeHeight = fallingLedge.HasTargetPosition ? fallingLedge.FromPosition.y - fallingLedge.TargetPosition.y : 0F;
+                }
+                else if (fallingLedge.HasTargetPosition)
+                {
+                    targetPosition = fallingLedge.TargetPosition;
+                    direction = fallingLedge.PerpendicularGrabDirection;
+                    ledgeHeight = 0F;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            if (ledgeHeight < -MaxClimbDownHeight)
+            {
+                targetPosition.y -= ledgeHeight + MaxClimbDownHeight;
+            }
+            transform.position = targetPosition;
+
+            if (ledgeHeight != 0F)
+            {
                 _isFrozen = true;
             }
+            _animationController.SetLedgeAnimation(direction, ledgeHeight);
             return true;
         }
 

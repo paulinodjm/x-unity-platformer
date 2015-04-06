@@ -11,6 +11,8 @@ public class PlayerAnimationController : MonoBehaviour
 
     public string ClimbOnState = "ClimbOn";
 
+    public string ClimbOffState = "ClimbOff";
+
     public float TransitionDuration = 0F;
 
     [Range(0, 1)]
@@ -37,16 +39,16 @@ public class PlayerAnimationController : MonoBehaviour
         }
     }
 
-    public void SetLedgeAnimation(LedgeSensor.IGrabInfo ledge)
+    public void SetLedgeAnimation(Vector3 direction, float height)
     {
-        if (!ledge.HasFromPosition || !ledge.HasTargetPosition)
-            return;
-
-        var deltaHeight = ledge.TargetPosition.y - ledge.FromPosition.y;
-        if (deltaHeight <= 0F)
-            return;
-
-        _animator.CrossFade(ClimbOnState, TransitionDuration);
-        transform.rotation = Quaternion.LookRotation(ledge.PerpendicularGrabDirection);
+        if (height > 0F)
+        {
+            _animator.CrossFade(ClimbOnState, TransitionDuration);
+        }
+        if (height < 0F)
+        {
+            _animator.CrossFade(ClimbOffState, TransitionDuration);
+        }
+        transform.rotation = Quaternion.LookRotation(direction);
     }
 }
