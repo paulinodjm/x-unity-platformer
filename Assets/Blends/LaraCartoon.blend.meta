@@ -659,7 +659,7 @@ ModelImporter:
       name: ClimbOn
       takeName: ClimbOn
       firstFrame: 0
-      lastFrame: 81
+      lastFrame: 75
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
