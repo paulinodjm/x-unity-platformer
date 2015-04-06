@@ -40,6 +40,8 @@ public class PlayerController : MonoBehaviour
 
     private PlayerAnimationController _animationController;
 
+    private bool _isFrozen;
+
     /// <summary>
     /// Returns the current player point of view.
     /// </summary>
@@ -77,6 +79,12 @@ public class PlayerController : MonoBehaviour
 	
 	void Update () 
     {
+        if (_isFrozen)
+        {
+            _characterController.Move(new Vector3(0, -5, 0));
+            return;
+        }
+
         if (_characterController.isGrounded && HandleFallingLedge())
             return;
 
@@ -111,6 +119,11 @@ public class PlayerController : MonoBehaviour
             _characterController.isGrounded
         );
 	}
+
+    void Unfreeze()
+    {
+        _isFrozen = false;
+    }
 
     private TransformedInput GetTransformedInput()
     {
@@ -201,6 +214,12 @@ public class PlayerController : MonoBehaviour
         {
             _animationController.SetLedgeAnimation(fallingLedge);
             transform.position = fallingLedge.TargetPosition;
+            
+            if (fallingLedge.TargetPosition.y > fallingLedge.FromPosition.y)
+            {
+                _characterController.Move(Vector3.zero);
+                _isFrozen = true;
+            }
             return true;
         }
 
