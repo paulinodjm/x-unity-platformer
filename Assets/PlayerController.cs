@@ -45,6 +45,8 @@ public class PlayerController : MonoBehaviour
 
     private bool _isFrozen;
 
+    private Vector3 _velocity;
+
     /// <summary>
     /// Returns the current player point of view.
     /// </summary>
@@ -91,7 +93,7 @@ public class PlayerController : MonoBehaviour
         if (_characterController.isGrounded && HandleFallingLedge())
             return;
 
-        var velocity = _characterController.velocity;
+        var velocity = _velocity;
         var input = GetTransformedInput();
 
         var parameters = _characterController.isGrounded ? WalkParameters : FallParameters;
@@ -116,16 +118,24 @@ public class PlayerController : MonoBehaviour
             velocity.y -= Gravity * Time.deltaTime;
         }
         _characterController.Move(velocity);
+        _velocity = _characterController.velocity;
 
         _animationController.UpdateAnimation(
-            (_characterController.isGrounded) ? input.Move : _characterController.velocity.normalized, 
+            (_characterController.isGrounded) ? input.Move : _velocity.normalized, 
             _characterController.isGrounded
         );
 	}
 
-    void Unfreeze()
+    void Freeze()
+    {
+        _isFrozen = true;
+        _velocity = Vector3.zero;
+    }
+
+    void Unfreeze(float gravity)
     {
         _isFrozen = false;
+        _velocity.y = -gravity;
     }
 
     private TransformedInput GetTransformedInput()
@@ -266,7 +276,7 @@ public class PlayerController : MonoBehaviour
 
             if (ledgeHeight != 0F)
             {
-                _isFrozen = true;
+                Freeze();
             }
             _animationController.SetLedgeAnimation(direction, ledgeHeight);
             return true;

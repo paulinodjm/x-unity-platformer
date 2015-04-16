@@ -751,13 +751,11 @@ ModelImporter:
         functionName: Unfreeze
         data: 
         objectReferenceParameter: {instanceID: 0}
-        floatParameter: 0
+        floatParameter: 2
         intParameter: 0
         messageOptions: 0
       transformMask:
       - path: 
-        weight: 1
-      - path: Cube
         weight: 1
       - path: LaraCroft
         weight: 1
@@ -778,7 +776,7 @@ ModelImporter:
       - path: LaraCroft_Armature/LowerBody/UpperBody
         weight: 1
       - path: LaraCroft_Armature/LowerBody/UpperBody/Head
-        weight: 1
+        weight: 0
       - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerHair
         weight: 0
       - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerHair/MiddleAir
