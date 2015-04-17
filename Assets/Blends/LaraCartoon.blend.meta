@@ -44,6 +44,11 @@ ModelImporter:
     100076: UpperBody_0
     100078: UpperHair_0
     100080: UpperPonyTail_0
+    100082: FootHandle_L
+    100084: FootHandle_R
+    100086: HandHandler_L
+    100088: HandHandler_R
+    100090: LowerBodyHandle
     400000: Cube
     400002: Cube_001
     400004: //RootNode
@@ -85,6 +90,11 @@ ModelImporter:
     400076: UpperBody_0
     400078: UpperHair_0
     400080: UpperPonyTail_0
+    400082: FootHandle_L
+    400084: FootHandle_R
+    400086: HandHandler_L
+    400088: HandHandler_R
+    400090: LowerBodyHandle
     2300000: Cube
     2300002: Cube_001
     2300004: Cube_002
@@ -138,6 +148,12 @@ ModelImporter:
     7400016: ClimbOn
     7400018: ClimbOff
     7400020: ClimbDown
+    7400022: Walk_FootRight
+    7400024: StartWalk
+    7400026: ContinueWalk
+    7400028: Walk_FootLeft
+    7400030: StopWalk_LeftFoot
+    7400032: StopWalk_RightFoot
     9500000: //RootNode
     11100000: //RootNode
     13700000: LaraCroft
@@ -425,7 +441,7 @@ ModelImporter:
       name: Idle
       takeName: Idle
       firstFrame: 0
-      lastFrame: 120
+      lastFrame: 10
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -451,34 +467,44 @@ ModelImporter:
         weight: 1
       - path: LaraCroft_Armature
         weight: 1
-      - path: LaraCroft_Armature/CameraTarget
+      - path: LaraCroft_Armature/FootHandle_L
         weight: 1
-      - path: LaraCroft_Armature/Foot_L
+      - path: LaraCroft_Armature/FootHandle_R
         weight: 1
-      - path: LaraCroft_Armature/Foot_R
+      - path: LaraCroft_Armature/HandHandler_L
         weight: 1
-      - path: LaraCroft_Armature/Hand_L
+      - path: LaraCroft_Armature/HandHandler_R
         weight: 1
-      - path: LaraCroft_Armature/Hand_R
+      - path: LaraCroft_Armature/LowerBodyHandle
         weight: 1
-      - path: LaraCroft_Armature/LowerBody
-        weight: 1
-      - path: LaraCroft_Armature/LowerBody/UpperBody
-        weight: 1
-      - path: LaraCroft_Armature/LowerBody/UpperBody/Head
-        weight: 0
-      - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerHair
-        weight: 0
-      - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerHair/MiddleAir
-        weight: 0
-      - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerHair/MiddleAir/UpperHair
-        weight: 0
-      - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerPonyTail
-        weight: 0
-      - path: LaraCroft_Armature/LowerBody/UpperBody/Head/LowerPonyTail/UpperPonyTail
-        weight: 0
       - path: LaraCroft_Armature/Root
         weight: 1
+      - path: LaraCroft_Armature/Root/CameraTarget
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir/UpperHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail/UpperPonyTail
+        weight: 0
       maskType: 0
       maskSource: {instanceID: 0}
     - serializedVersion: 16
@@ -791,6 +817,426 @@ ModelImporter:
         weight: 1
       maskType: 0
       maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: StartWalk
+      takeName: Walk_StartRight
+      firstFrame: 0
+      lastFrame: 10
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: LaraCroft
+        weight: 1
+      - path: LaraCroft_Armature
+        weight: 1
+      - path: LaraCroft_Armature/FootHandle_L
+        weight: 1
+      - path: LaraCroft_Armature/FootHandle_R
+        weight: 1
+      - path: LaraCroft_Armature/HandHandler_L
+        weight: 1
+      - path: LaraCroft_Armature/HandHandler_R
+        weight: 1
+      - path: LaraCroft_Armature/LowerBodyHandle
+        weight: 1
+      - path: LaraCroft_Armature/Root
+        weight: 1
+      - path: LaraCroft_Armature/Root/CameraTarget
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir/UpperHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail/UpperPonyTail
+        weight: 0
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: ContinueWalk
+      takeName: Walk_StartRight
+      firstFrame: 10
+      lastFrame: 20
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: LaraCroft
+        weight: 1
+      - path: LaraCroft_Armature
+        weight: 1
+      - path: LaraCroft_Armature/FootHandle_L
+        weight: 1
+      - path: LaraCroft_Armature/FootHandle_R
+        weight: 1
+      - path: LaraCroft_Armature/HandHandler_L
+        weight: 1
+      - path: LaraCroft_Armature/HandHandler_R
+        weight: 1
+      - path: LaraCroft_Armature/LowerBodyHandle
+        weight: 1
+      - path: LaraCroft_Armature/Root
+        weight: 1
+      - path: LaraCroft_Armature/Root/CameraTarget
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir/UpperHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail/UpperPonyTail
+        weight: 0
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: Walk_FootLeft
+      takeName: Walk_StartRight
+      firstFrame: 20
+      lastFrame: 30
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: LaraCroft
+        weight: 1
+      - path: LaraCroft_Armature
+        weight: 1
+      - path: LaraCroft_Armature/FootHandle_L
+        weight: 1
+      - path: LaraCroft_Armature/FootHandle_R
+        weight: 1
+      - path: LaraCroft_Armature/HandHandler_L
+        weight: 1
+      - path: LaraCroft_Armature/HandHandler_R
+        weight: 1
+      - path: LaraCroft_Armature/LowerBodyHandle
+        weight: 1
+      - path: LaraCroft_Armature/Root
+        weight: 1
+      - path: LaraCroft_Armature/Root/CameraTarget
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir/UpperHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail/UpperPonyTail
+        weight: 0
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: Walk_FootRight
+      takeName: Walk_StartLeft
+      firstFrame: 20
+      lastFrame: 30
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: LaraCroft
+        weight: 1
+      - path: LaraCroft_Armature
+        weight: 1
+      - path: LaraCroft_Armature/FootHandle_L
+        weight: 1
+      - path: LaraCroft_Armature/FootHandle_R
+        weight: 1
+      - path: LaraCroft_Armature/HandHandler_L
+        weight: 1
+      - path: LaraCroft_Armature/HandHandler_R
+        weight: 1
+      - path: LaraCroft_Armature/LowerBodyHandle
+        weight: 1
+      - path: LaraCroft_Armature/Root
+        weight: 1
+      - path: LaraCroft_Armature/Root/CameraTarget
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir/UpperHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail/UpperPonyTail
+        weight: 0
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: StopWalk_LeftFoot
+      takeName: Walk_StartLeft
+      firstFrame: 30
+      lastFrame: 47
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: LaraCroft
+        weight: 1
+      - path: LaraCroft_Armature
+        weight: 1
+      - path: LaraCroft_Armature/FootHandle_L
+        weight: 1
+      - path: LaraCroft_Armature/FootHandle_R
+        weight: 1
+      - path: LaraCroft_Armature/HandHandler_L
+        weight: 1
+      - path: LaraCroft_Armature/HandHandler_R
+        weight: 1
+      - path: LaraCroft_Armature/LowerBodyHandle
+        weight: 1
+      - path: LaraCroft_Armature/Root
+        weight: 1
+      - path: LaraCroft_Armature/Root/CameraTarget
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir/UpperHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail/UpperPonyTail
+        weight: 0
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: StopWalk_RightFoot
+      takeName: Walk_StartRight
+      firstFrame: 30
+      lastFrame: 47
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: LaraCroft
+        weight: 1
+      - path: LaraCroft_Armature
+        weight: 1
+      - path: LaraCroft_Armature/FootHandle_L
+        weight: 1
+      - path: LaraCroft_Armature/FootHandle_R
+        weight: 1
+      - path: LaraCroft_Armature/HandHandler_L
+        weight: 1
+      - path: LaraCroft_Armature/HandHandler_R
+        weight: 1
+      - path: LaraCroft_Armature/LowerBodyHandle
+        weight: 1
+      - path: LaraCroft_Armature/Root
+        weight: 1
+      - path: LaraCroft_Armature/Root/CameraTarget
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/Foot_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_L
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Hand_R
+        weight: 1
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerHair/MiddleAir/UpperHair
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail
+        weight: 0
+      - path: LaraCroft_Armature/Root/LowerBody/UpperBody/Head/LowerPonyTail/UpperPonyTail
+        weight: 0
+      maskType: 0
+      maskSource: {instanceID: 0}
     isReadable: 1
   meshes:
     lODScreenPercentages: []
@@ -826,7 +1272,7 @@ ModelImporter:
     armStretch: .0500000007
     legStretch: .0500000007
     feetSpacing: 0
-    rootMotionBoneName: 
+    rootMotionBoneName: Root
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   animationType: 2
   additionalBone: 0
