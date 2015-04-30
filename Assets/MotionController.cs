@@ -21,13 +21,17 @@ public class MotionController : MonoBehaviour
 
         if (move.magnitude > 0F)
         {
-            var rotationRate = _animator.GetFloat("RotationRate") * .02F;
+            var rotationRate = _animator.GetFloat("RotationRate") * 0;
             print(rotationRate);
             transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(move), rotationRate);
         }
 
         _animator.SetBool("Walk", move.magnitude > 0F);
-        _animator.SetFloat("Direction", direction, .05F, Time.deltaTime);
-        
+        _animator.SetFloat("Direction", direction);
+    }
+
+    void OnGUI()
+    {
+        GUILayout.Label(_lastDirection.ToString());
     }
 }
