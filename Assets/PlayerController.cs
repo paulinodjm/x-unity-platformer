@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System;
+using Common;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(InputController))]
@@ -37,7 +38,7 @@ public class PlayerController : MonoBehaviour
 
     private CharacterController _characterController;
 
-    private InputController _inputController;
+    private IInputController _inputController;
 
     private LedgeSensor _ledgeSensor;
 
@@ -77,7 +78,7 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         _characterController = GetComponent<CharacterController>();
-        _inputController = GetComponent<InputController>();
+        _inputController = GetComponent<IInputController>();
         _ledgeSensor = GetComponent<LedgeSensor>();
         _animationController = GetComponent<PlayerAnimationController>();
     }

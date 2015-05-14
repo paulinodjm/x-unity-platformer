@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Common;
+using System;
 using UnityEngine;
 
-public class InputController : MonoBehaviour
+public class InputController : MonoBehaviour, IInputController
 {
     #region Inspector
 
