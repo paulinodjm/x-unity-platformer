@@ -13,26 +13,8 @@ public class PlayerController : MonoBehaviour
     [Tooltip("The player's point of view")]
     public GameObject Pov;
 
-    [Tooltip("Walk parameters")]
-    public GroundedMovementsInfo WalkParameters = new GroundedMovementsInfo()
-    {
-        Speed = 5F,
-    };
-
-    [Tooltip("Fall parameters")]
-    public GroundedMovementsInfo FallParameters = new GroundedMovementsInfo()
-    {
-        Speed = 5F,
-    };
-
-    [Tooltip("The gravity [0; infinity]")]
-    public float Gravity;
-
-    [Tooltip("The jump force [0; infinity]")]
-    public float JumpForce;
-
-    [Tooltip("The maximum height the character can climb off without falling")]
-    public float MaxClimbDownHeight;
+    [Tooltip("The character's rotation speed, in degree per second")]
+    public float RotationSpeed = 360F;
 
     #endregion
 
@@ -86,14 +68,7 @@ public class PlayerController : MonoBehaviour
         var input = GetTransformedInput();
         _animatorController.InputMove = input.Move.magnitude;
 
-        if (input.Move.magnitude != 0F)
-        {
-            transform.rotation = Quaternion.Lerp(
-                transform.rotation, 
-                Quaternion.LookRotation(input.Move),
-                _animatorController.RotationLerpFactor
-            );
-        }
+        ApplyGroundRotation(input.Move);
 
         var localVelocity = _animatorController.Velocity;
         var velocity = Vector3.zero;
@@ -114,6 +89,33 @@ public class PlayerController : MonoBehaviour
             Forward = forwardAxis * _inputController.Forward,
             Strafe = strafeAxis * _inputController.Strafe,
         };
+    }
+
+    private void ApplyGroundRotation(Vector3 move)
+    {
+        if (move.magnitude != 0F)
+        {
+            var desiredRotation = Quaternion.LookRotation(move);
+            var desiredDeltaAngle = Mathf.DeltaAngle(transform.eulerAngles.y, desiredRotation.eulerAngles.y);
+
+            var maxDeltaAngle = RotationSpeed * _animatorController.RotationLerpFactor * Time.deltaTime;
+
+            float actualDeltaAngle;
+            if (desiredDeltaAngle > maxDeltaAngle)
+            {
+                actualDeltaAngle = maxDeltaAngle;
+            }
+            else if (desiredDeltaAngle < -maxDeltaAngle)
+            {
+                actualDeltaAngle = -maxDeltaAngle;
+            }
+            else
+            {
+                actualDeltaAngle = desiredDeltaAngle;
+            }
+
+            transform.Rotate(Vector3.up, actualDeltaAngle, Space.Self);
+        }
     }
 
     #region Trucs internes

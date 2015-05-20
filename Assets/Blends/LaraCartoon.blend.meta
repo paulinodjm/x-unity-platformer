@@ -216,12 +216,12 @@ ModelImporter:
           serializedVersion: 2
           curve:
           - time: 0
-            value: .049999997
+            value: 1
             inSlope: 0
             outSlope: 0
             tangentMode: 0
           - time: 1
-            value: .049999997
+            value: 1
             inSlope: 0
             outSlope: 0
             tangentMode: 0
@@ -338,12 +338,12 @@ ModelImporter:
           serializedVersion: 2
           curve:
           - time: 0
-            value: .0500000119
+            value: 1
             inSlope: 0
             outSlope: 0
             tangentMode: 0
           - time: 1
-            value: .0500000119
+            value: 1
             inSlope: 0
             outSlope: 0
             tangentMode: 0
