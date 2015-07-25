@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System;
+using Common;
 
 public class LedgeSensor : MonoBehaviour
 {
@@ -35,7 +36,7 @@ public class LedgeSensor : MonoBehaviour
     /// </summary>
     public List<IGrabInfo> GrabInfos { get; private set; }
 
-    private CharacterController _characterController;
+    private ICharacterProperties _characterProperties;
 
     public LedgeSensor()
     {
@@ -45,7 +46,7 @@ public class LedgeSensor : MonoBehaviour
     void Awake()
     {
         Ledges = new List<Ledge>();
-        _characterController = GetComponent<CharacterController>();
+        _characterProperties = GetComponent<ICharacterProperties>();
     }
 
     void OnTriggerEnter(Collider collider)
@@ -102,8 +103,8 @@ public class LedgeSensor : MonoBehaviour
                 deltaHeight = grabInfo.TargetPosition.y - grabInfo.FromPosition.y;
             }
 
-            if (grabInfo.TrueGrabDistance < _characterController.radius * FallThresehold
-             || (grabInfo.IsValid && grabInfo.TrueGrabDistance < _characterController.radius && deltaHeight > 0F))
+            if (grabInfo.TrueGrabDistance < _characterProperties.Radius * FallThresehold
+             || (grabInfo.IsValid && grabInfo.TrueGrabDistance < _characterProperties.Radius && deltaHeight > 0F))
             {
                 if (nearestLedge == null || grabInfo.TrueGrabDistance < nearestLedge.TrueGrabDistance)
                 {
@@ -120,7 +121,7 @@ public class LedgeSensor : MonoBehaviour
         var ledgeBreakValue = Mathf.Sin(LedgeBreakAngle * Mathf.Deg2Rad);
 
         var character = CreateCharacterInfo(Vector3.zero);
-        var radius = _characterController.radius * FallThresehold + Margin;
+        var radius = _characterProperties.Radius * FallThresehold + Margin;
 
         foreach (var grabInfo in GrabInfos)
         {
@@ -151,11 +152,11 @@ public class LedgeSensor : MonoBehaviour
     {
         return new CharacterInfo()
         {
-            Height = _characterController.height,
+            Height = _characterProperties.Height,
             Position = position,
-            Radius = _characterController.radius,
+            Radius = _characterProperties.Radius,
             FallRadiusFactor = FallThresehold,
-            StepOffset = _characterController.stepOffset,
+            StepOffset = _characterProperties.StepOffset,
         };
     }
 
