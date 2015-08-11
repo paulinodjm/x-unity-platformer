@@ -76,9 +76,6 @@ public class LedgeSensor : MonoBehaviour
             var calculator = new LedgeGrabCalculator(ledge, character, Margin);
             var checker = new ClimbPositionChecker(calculator, CollisionLayers, MaxClimbDownHeight);
 
-            if (checker.IsStep)
-                continue;
-
             var info = new GrabInfo(ledge, calculator, checker);
             GrabInfos.Add(info);
         }
