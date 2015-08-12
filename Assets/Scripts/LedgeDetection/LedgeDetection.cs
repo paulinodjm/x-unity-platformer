@@ -14,20 +14,15 @@ public static partial class LedgeUtils
         var relativePosition = position - ledge.Start;
         relativePosition.y = 0;
 
-        var rawGrabPosition = Vector3.Project(-relativePosition, ledge.transform.forward) + relativePosition;
+        var relativeGrabPosition = Vector3.Project(-relativePosition, ledge.transform.forward) + relativePosition;
 
-        var grabVector = rawGrabPosition - relativePosition;
-
-        var perpendicularGrabPosition = grabVector.normalized;
-        var perpendicularGrabDistance = grabVector.magnitude;
-
-        if (rawGrabPosition.normalized == -ledge.FlatDirection)
+        if (relativeGrabPosition.normalized == -ledge.FlatDirection)
         {
-            rawGrabPosition = Vector3.zero;
+            relativeGrabPosition = Vector3.zero;
         }
-        else if (rawGrabPosition.magnitude > ledge.FlatLength)
+        else if (relativeGrabPosition.magnitude > ledge.FlatLength)
         {
-            rawGrabPosition = ledge.FlatEnd - ledge.Start;
+            relativeGrabPosition = ledge.FlatEnd - ledge.Start;
         }
         else
         {
@@ -39,17 +34,17 @@ public static partial class LedgeUtils
         {
             safeGrabPosition = ledge.Start + (ledge.FlatDirection * (ledge.FlatLength / 2F));
         }
-        else if (rawGrabPosition.magnitude < margin)
+        else if (relativeGrabPosition.magnitude < margin)
         {
             safeGrabPosition = ledge.Start + (ledge.FlatDirection * margin);
         }
-        else if (rawGrabPosition.magnitude > ledge.FlatLength - margin)
+        else if (relativeGrabPosition.magnitude > ledge.FlatLength - margin)
         {
             safeGrabPosition = ledge.FlatEnd - (ledge.FlatDirection * margin);
         }
         else
         {
-            safeGrabPosition = ledge.Start + rawGrabPosition;
+            safeGrabPosition = ledge.Start + relativeGrabPosition;
         }
 
         var normalizedGrabPosition = Mathf.InverseLerp(0, ledge.FlatLength, Vector3.Distance(ledge.Start, safeGrabPosition));
@@ -58,9 +53,34 @@ public static partial class LedgeUtils
         var grabPosition = safeGrabPosition;
         grabPosition.y = height;
 
+        var grabDirection = Vector3.Cross(ledge.Direction, Vector3.up);
+        if (Vector3.Dot(grabDirection, relativeGrabPosition - relativePosition) < 0F)
+        {
+            grabDirection = -grabDirection;
+        }
+
         return new GrabPosition()
         {
-            Position = grabPosition,
+            Value = grabPosition,
+            FromPosition = position,
+
+            PerpendicularGrabDirection = grabDirection,
         };
+    }
+
+    /// <summary>
+    /// Represents the side of a ledge relative to the character position
+    /// </summary>
+    public enum SideStyle
+    {
+        /// <summary>
+        /// The side near the character
+        /// </summary>
+        Near,
+
+        /// <summary>
+        /// The side far the character, behind the ledge
+        /// </summary>
+        Far,
     }
 }
