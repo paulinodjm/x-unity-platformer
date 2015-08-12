@@ -99,6 +99,7 @@ public static partial class LedgeUtils
                 result = new ClimbPosition()
                 {
                     Value = climbPosition,
+                    GrabPosition = this,
                 };
             }
 
