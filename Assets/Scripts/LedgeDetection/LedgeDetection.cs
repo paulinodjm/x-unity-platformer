@@ -62,6 +62,7 @@ public static partial class LedgeUtils
         return new GrabPosition()
         {
             Value = grabPosition,
+            LedgeDistance = (relativeGrabPosition - relativePosition).magnitude,
             FromPosition = position,
 
             PerpendicularGrabDirection = grabDirection,

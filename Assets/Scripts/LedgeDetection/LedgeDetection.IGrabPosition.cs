@@ -13,6 +13,14 @@ public static partial class LedgeUtils
         }
 
         /// <summary>
+        /// Returns the distance between the FromPosition and the nearest point of the ledge.
+        /// </summary>
+        float LedgeDistance
+        {
+            get;
+        }
+
+        /// <summary>
         /// Returns the position from which the calculation was made
         /// </summary>
         Vector3 FromPosition

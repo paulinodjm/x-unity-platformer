@@ -6,6 +6,7 @@ public class LedgeTest : MonoBehaviour
 {
     [Header("Ledge")]
     public Color LowerLedgeColor = Color.black;
+    public Color CrossedLedgeColor = Color.green;
     public Color UpperLedgeColor = Color.red;
 
     [Header("General")]
@@ -43,7 +44,9 @@ public class LedgeTest : MonoBehaviour
             var grabPosition = ledge.CalcGrabPosition(transform.position, _character.Radius + LowerLedgeDistance);
             var isUpperLedge = grabPosition.Value.y >= transform.position.y + _character.StepOffset;
 
-            Gizmos.color = isUpperLedge ? UpperLedgeColor : LowerLedgeColor;
+            var isCrossed = grabPosition.LedgeDistance <= _character.Radius;
+
+            Gizmos.color = isUpperLedge ?  UpperLedgeColor : (isCrossed ? CrossedLedgeColor : LowerLedgeColor);
             Gizmos.DrawLine(ledge.Start, ledge.End);
             Gizmos.DrawSphere(grabPosition.Value, .1F);
 

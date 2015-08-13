@@ -10,6 +10,12 @@ public static partial class LedgeUtils
             set;
         }
 
+        public float LedgeDistance
+        {
+            get;
+            set;
+        }
+
         public Vector3 FromPosition
         {
             get;
