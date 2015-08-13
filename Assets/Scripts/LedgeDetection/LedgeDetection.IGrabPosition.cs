@@ -21,6 +21,14 @@ public static partial class LedgeUtils
         }
 
         /// <summary>
+        /// Returns the ledge
+        /// </summary>
+        Ledge Ledge
+        {
+            get;
+        }
+
+        /// <summary>
         /// Returns the position from which the calculation was made
         /// </summary>
         Vector3 FromPosition

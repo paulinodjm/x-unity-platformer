@@ -63,6 +63,8 @@ public static partial class LedgeUtils
         {
             Value = grabPosition,
             LedgeDistance = (relativeGrabPosition - relativePosition).magnitude,
+
+            Ledge = ledge,
             FromPosition = position,
 
             PerpendicularGrabDirection = grabDirection,

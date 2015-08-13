@@ -16,6 +16,12 @@ public static partial class LedgeUtils
             set;
         }
 
+        public Ledge Ledge
+        {
+            get;
+            set;
+        }
+
         public Vector3 FromPosition
         {
             get;
