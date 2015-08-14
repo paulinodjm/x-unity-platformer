@@ -29,14 +29,21 @@ public class GroundedLedgeBehaviour : MonoBehaviour
     public Color UpperLedgeColor = Color.blue;
     public Color LowerLedgeColor = Color.black;
 
-    public List<Ledge> LowerLedges;
-
     #endregion
 
     /// <summary>
     /// Returns the available upper ledges
     /// </summary>
     public List<IUpperLedge> UpperLedges
+    {
+        get;
+        private set;
+    }
+
+    /// <summary>
+    /// Returns the available lower ledges
+    /// </summary>
+    public List<ILowerLedge> LowerLedges
     {
         get;
         private set;
@@ -51,6 +58,7 @@ public class GroundedLedgeBehaviour : MonoBehaviour
         _character = GetComponent<ICharacterProperties>();
 
         UpperLedges = new List<IUpperLedge>();
+        LowerLedges = new List<ILowerLedge>();
     }
 
     protected void Update()
@@ -103,7 +111,8 @@ public class GroundedLedgeBehaviour : MonoBehaviour
             Debug.DrawRay(grabPosition.Value, -climbPosition.GrabPosition.PerpendicularGrabDirection * climbPosition.GrabPosition.PerpendicularGrabDistance, UpperLedgeColor);
         }
 
-        UpperLedges.Add(new UpperLedge()
+        UpperLedges.Add(
+            new UpperLedge()
             {
                 GrabPosition = grabPosition,
                 TargetPosition = climbPosition.Value,
@@ -117,31 +126,114 @@ public class GroundedLedgeBehaviour : MonoBehaviour
     /// <param name="grabPosition">The grab position</param>
     private void HandleLowerLedge(LedgeUtils.IGrabPosition grabPosition)
     {
-        var upperSide = LedgeUtils.SideStyle.Near;
+        // params
+        var groundPosition = grabPosition.Value.y + GroundMargin;
 
-        LedgeUtils.IFallCheckResult fallPosition;
-        fallPosition = grabPosition.CheckFallPosition(LedgeUtils.SideStyle.Far, _character.Radius, _character.Height, WallMargin, FallHeight, CollisionMask, GroundMargin);
-        if (fallPosition == null)
+        // results
+        Vector3? fallPosition;
+        LedgeUtils.SideStyle upperSide;
+
+        // computations
+        var farFallPosition = grabPosition.CheckFallPosition(LedgeUtils.SideStyle.Far, _character.Radius, _character.Height, WallMargin, FallHeight, CollisionMask, GroundMargin);
+        if (farFallPosition != null)
         {
-            fallPosition = grabPosition.CheckFallPosition(LedgeUtils.SideStyle.Near, _character.Radius, _character.Height, WallMargin, FallHeight, CollisionMask, GroundMargin);
-            if (fallPosition == null)
+            if (groundPosition - farFallPosition.Value.y > _character.StepOffset)
+            {
+                fallPosition = farFallPosition.Value;
+                upperSide = LedgeUtils.SideStyle.Near;
+            }
+            else
+            {
+                var nearFallPosition = grabPosition.CheckFallPosition(LedgeUtils.SideStyle.Near, _character.Radius, _character.Height, WallMargin, FallHeight, CollisionMask, GroundMargin);
+                if (nearFallPosition != null)
+                {
+                    if (groundPosition - nearFallPosition.Value.y > _character.StepOffset)
+                    {
+                        fallPosition = nearFallPosition.Value;
+                        upperSide = LedgeUtils.SideStyle.Far;
+                    }
+                    else
+                    {
+                        if (Mathf.Abs(nearFallPosition.Value.y - farFallPosition.Value.y) > _character.StepOffset)
+                        {
+                            if (nearFallPosition.Value.y < farFallPosition.Value.y)
+                            {
+                                fallPosition = nearFallPosition.Value;
+                                upperSide = LedgeUtils.SideStyle.Far;
+                            }
+                            else
+                            {
+                                fallPosition = farFallPosition.Value;
+                                upperSide = LedgeUtils.SideStyle.Near;
+                            }
+                        }
+                        else
+                        {
+                            // the difference between the two fall position is not big enough. Don't retains the ledge
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    fallPosition = null;
+                    upperSide = LedgeUtils.SideStyle.Far;
+                }
+            }
+        }
+        else
+        {
+            var nearFallPosition = grabPosition.CheckFallPosition(LedgeUtils.SideStyle.Near, _character.Radius, _character.Height, WallMargin, FallHeight, CollisionMask, GroundMargin);
+            if (nearFallPosition != null)
+            {
+                if (groundPosition - nearFallPosition.Value.y > _character.StepOffset)
+                {
+                    fallPosition = nearFallPosition.Value;
+                    upperSide = LedgeUtils.SideStyle.Far;
+                }
+                else
+                {
+                    fallPosition = null;
+                    upperSide = LedgeUtils.SideStyle.Near;
+                }
+            }
+            else
+            {
+                // both side are blocked. Don't retains the ledge
                 return;
-
-            upperSide = LedgeUtils.SideStyle.Far;
+            }
         }
 
-        var deltaHeight = grabPosition.Value.y + GroundMargin - fallPosition.Value.y;
-        if (deltaHeight <= _character.StepOffset)
-            return;
-
-        // check the position on top of the ledge
         var climbPosition = grabPosition.CheckClimbPosition(upperSide, _character.Radius, _character.Height, FallDistance, ClimbMargin, CollisionMask, GroundMargin);
-        if (climbPosition == null)
-            return;
+        Vector3? upPosition;
+        if (climbPosition != null)
+        {
+            upPosition = climbPosition.Value;
+        }
+        else
+        {
+            upPosition = null;
+        }
 
-        Debug.DrawRay(fallPosition.Value, Vector3.up, LowerLedgeColor);
-        Debug.DrawRay(climbPosition.Value, Vector3.up, UpperLedgeColor);
-        LowerLedges.Add(grabPosition.Ledge);
+        if (fallPosition != null)
+        {
+            Debug.DrawRay(fallPosition.Value, Vector3.up, LowerLedgeColor);
+        }
+
+        if (upPosition != null)
+        {
+            Debug.DrawRay(upPosition.Value, Vector3.up, UpperLedgeColor);
+        }
+
+        LowerLedges.Add(
+            new LowerLedge()
+            {
+                GrabPosition = grabPosition,
+                DownPosition = fallPosition,
+                UpPosition = upPosition,
+                IsGrounded = (upperSide == LedgeUtils.SideStyle.Near)
+            }
+        );
     }
 
     public interface IUpperLedge
@@ -163,6 +255,41 @@ public class GroundedLedgeBehaviour : MonoBehaviour
         }
     }
 
+    public interface ILowerLedge
+    {
+        /// <summary>
+        /// Returns the attached grab position
+        /// </summary>
+        LedgeUtils.IGrabPosition GrabPosition
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Returns the character position down the ledge, if any
+        /// </summary>
+        Vector3? DownPosition
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Returns the character position on top of the ledge, if any
+        /// </summary>
+        Vector3? UpPosition
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Tells weahter the character stands on the grounded side of the ledge or not
+        /// </summary>
+        bool IsGrounded
+        {
+            get;
+        }
+    }
+
     private class UpperLedge : IUpperLedge
     {
         public LedgeUtils.IGrabPosition GrabPosition
@@ -172,6 +299,33 @@ public class GroundedLedgeBehaviour : MonoBehaviour
         }
 
         public Vector3 TargetPosition
+        {
+            get;
+            set;
+        }
+    }
+
+    private class LowerLedge : ILowerLedge
+    {
+        public LedgeUtils.IGrabPosition GrabPosition
+        {
+            get;
+            set;
+        }
+
+        public Vector3? DownPosition
+        {
+            get;
+            set;
+        }
+
+        public Vector3? UpPosition
+        {
+            get;
+            set;
+        }
+
+        public bool IsGrounded
         {
             get;
             set;
