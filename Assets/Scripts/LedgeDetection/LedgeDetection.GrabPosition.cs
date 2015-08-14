@@ -52,7 +52,7 @@ public static partial class LedgeUtils
             set;
         }
 
-        public IClimbPosition CheckClimbPosition(SideStyle side, float capsuleRadius, float capsuleHeight, float ledgeDistance, float swipeHeight, LayerMask collisionMask, float errorMargin)
+        public IClimbCheckResult CheckClimbPosition(SideStyle side, float capsuleRadius, float capsuleHeight, float ledgeDistance, float swipeHeight, LayerMask collisionMask, float errorMargin)
         {
             var direction = (side == SideStyle.Far) ? PerpendicularGrabDirection : -PerpendicularGrabDirection;
             var footPosition = Value + (direction * ledgeDistance);
@@ -82,7 +82,7 @@ public static partial class LedgeUtils
             topPosition = bottomPosition;
             topPosition.y += capsuleHeight - (2 * capsuleRadius);
 
-            IClimbPosition result;
+            IClimbCheckResult result;
             if (Physics.CheckCapsule(bottomPosition, topPosition, capsuleRadius, collisionMask))
             {
                 Debug.DrawLine(bottomPosition, topPosition, Color.red);
@@ -90,7 +90,7 @@ public static partial class LedgeUtils
             }
             else
             {
-                result = new ClimbPosition()
+                result = new ClimbCheckResult()
                 {
                     Value = climbPosition,
                     GrabPosition = this,
@@ -100,7 +100,7 @@ public static partial class LedgeUtils
             return result;
         }
 
-        public IFallPosition CheckFallPosition(SideStyle side, float capsuleRadius, float capsuleHeight, float ledgeDistance, float swipeHeight, LayerMask collisionMask, float errorMargin)
+        public IFallCheckResult CheckFallPosition(SideStyle side, float capsuleRadius, float capsuleHeight, float ledgeDistance, float swipeHeight, LayerMask collisionMask, float errorMargin)
         {
             var direction = (side == SideStyle.Far) ? PerpendicularGrabDirection : -PerpendicularGrabDirection;
             var footPosition = Value + (direction * (ledgeDistance + capsuleRadius));
@@ -133,7 +133,7 @@ public static partial class LedgeUtils
                 fallPosition.y -= swipeHeight;
             }
 
-            return new FallPosition()
+            return new FallCheckResult()
             {
                 Value = fallPosition,
 

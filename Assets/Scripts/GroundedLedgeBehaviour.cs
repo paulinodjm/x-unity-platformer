@@ -104,7 +104,7 @@ public class GroundedLedgeBehaviour : MonoBehaviour
     {
         var upperSide = LedgeUtils.SideStyle.Near;
 
-        LedgeUtils.IFallPosition fallPosition;
+        LedgeUtils.IFallCheckResult fallPosition;
         fallPosition = grabPosition.CheckFallPosition(LedgeUtils.SideStyle.Far, _character.Radius, _character.Height, WallMargin, FallHeight, CollisionMask, GroundMargin);
         if (fallPosition == null)
         {

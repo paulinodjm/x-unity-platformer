@@ -2,20 +2,7 @@
 
 public static partial class LedgeUtils 
 {
-    public interface IFallPosition
-    {
-        Vector3 Value
-        {
-            get;
-        }
-
-        IGrabPosition GrabPosition
-        {
-            get;
-        }
-    }
-
-    private class FallPosition : IFallPosition
+    private class FallCheckResult : IFallCheckResult
     {
         public Vector3 Value
         {

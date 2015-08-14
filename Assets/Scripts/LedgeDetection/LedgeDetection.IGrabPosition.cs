@@ -80,7 +80,7 @@ public static partial class LedgeUtils
         /// <param name="errorMargin">A margin added between the ground and the character capsule to prevent collision check errors. 
         /// This value is reported on the result; keep it as small as possible.</param>
         /// <returns>The climb position, if any; null if the character can't stand here</returns>
-        IClimbPosition CheckClimbPosition(SideStyle side, float capsuleRadius, float capsuleHeight, float ledgeDistance, float swipeHeight, LayerMask collisionMask, float errorMargin);
+        IClimbCheckResult CheckClimbPosition(SideStyle side, float capsuleRadius, float capsuleHeight, float ledgeDistance, float swipeHeight, LayerMask collisionMask, float errorMargin);
 
         /// <summary>
         /// Check if the character can fall of the ledge by performing a vertical capsule swipe.
@@ -94,6 +94,6 @@ public static partial class LedgeUtils
         /// <param name="errorMargin">A margin added between the ground and the character capsule to prevent collision check errors. 
         /// This value is reported on the result; keep it as small as possible.</param>
         /// <returns>The fall position, if any; null if the character can't fall of the ledge</returns>
-        IFallPosition CheckFallPosition(SideStyle side, float capsuleRadius, float capsuleHeight, float ledgeDistance, float swipeHeight, LayerMask collisionMask, float errorMargin);
+        IFallCheckResult CheckFallPosition(SideStyle side, float capsuleRadius, float capsuleHeight, float ledgeDistance, float swipeHeight, LayerMask collisionMask, float errorMargin);
     }
 }

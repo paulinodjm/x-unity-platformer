@@ -2,7 +2,7 @@
 
 public static partial class LedgeUtils 
 {
-    public interface IClimbPosition
+    public interface IClimbCheckResult
     {
         /// <summary>
         /// Returns the climb position value
@@ -18,21 +18,6 @@ public static partial class LedgeUtils
         IGrabPosition GrabPosition
         {
             get;
-        }
-    }
-
-    private class ClimbPosition : IClimbPosition
-    {
-        public Vector3 Value
-        {
-            get;
-            set;
-        }
-
-        public IGrabPosition GrabPosition
-        {
-            get;
-            set;
         }
     }
 }
