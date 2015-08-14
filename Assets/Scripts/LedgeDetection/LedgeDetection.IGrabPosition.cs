@@ -37,6 +37,14 @@ public static partial class LedgeUtils
         }
 
         /// <summary>
+        /// The minimum margin asked between the grab position and the ledge ends
+        /// </summary>
+        float Margin
+        {
+            get;
+        }
+
+        /// <summary>
         /// Check if the character can stand up on top of the ledge by performing a vertical capsule swipe.
         /// </summary>
         /// <param name="side">The ledge side from which perform the swipe</param>

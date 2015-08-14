@@ -16,17 +16,20 @@ public static partial class LedgeUtils
 
         var relativeGrabPosition = Vector3.Project(-relativePosition, ledge.transform.forward) + relativePosition;
 
+        bool isInFront;
         if (relativeGrabPosition.normalized == -ledge.FlatDirection)
         {
+            isInFront = false;
             relativeGrabPosition = Vector3.zero;
         }
         else if (relativeGrabPosition.magnitude > ledge.FlatLength)
         {
+            isInFront = false;
             relativeGrabPosition = ledge.FlatEnd - ledge.Start;
         }
         else
         {
-            // valid
+            isInFront = true;
         }
 
         Vector3 safeGrabPosition;
@@ -59,6 +62,8 @@ public static partial class LedgeUtils
             grabDirection = -grabDirection;
         }
 
+        var grabDistance = Vector3.Project(-relativePosition, grabDirection).magnitude;
+
         return new GrabPosition()
         {
             Value = grabPosition,
@@ -66,8 +71,11 @@ public static partial class LedgeUtils
 
             Ledge = ledge,
             FromPosition = position,
+            Margin = margin, 
 
             PerpendicularGrabDirection = grabDirection,
+            PerpendicularGrabDistance = grabDistance,
+            IsInFront = isInFront,
         };
     }
 
