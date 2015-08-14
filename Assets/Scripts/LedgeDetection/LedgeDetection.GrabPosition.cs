@@ -34,27 +34,18 @@ public static partial class LedgeUtils
             set;
         }
 
-        /// <summary>
-        /// The grab direction to go to the grab position, ignoring the y axis, and perpendicular to the ledge.
-        /// </summary>
         public Vector3 PerpendicularGrabDirection
         {
             get;
             set;
         }
 
-        /// <summary>
-        /// The distance to go to the grab position, ignoring the y axis, and perpendicular to the ledge
-        /// </summary>
         public float PerpendicularGrabDistance
         {
             get;
             set;
         }
 
-        /// <summary>
-        /// Tell whether or not the grab position is in front of the player
-        /// </summary>
         public bool IsInFront
         {
             get;
@@ -102,9 +93,6 @@ public static partial class LedgeUtils
                 result = new ClimbPosition()
                 {
                     Value = climbPosition,
-                    IsInFront = IsInFront,
-                    PerpendicularGrabDistance = PerpendicularGrabDistance,
-                    PerpendicularGrabDirection = PerpendicularGrabDirection,
                     GrabPosition = this,
                 };
             }

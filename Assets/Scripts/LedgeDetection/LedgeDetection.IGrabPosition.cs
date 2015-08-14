@@ -21,6 +21,30 @@ public static partial class LedgeUtils
         }
 
         /// <summary>
+        /// The grab direction to go to the grab position, ignoring the y axis, and perpendicular to the ledge.
+        /// </summary>
+        Vector3 PerpendicularGrabDirection
+        {
+            get;
+        }
+
+        /// <summary>
+        /// The distance to go to the grab position, ignoring the y axis, and perpendicular to the ledge
+        /// </summary>
+        float PerpendicularGrabDistance
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Tell whether or not the grab position is in front of the player
+        /// </summary>
+        bool IsInFront
+        {
+            get;
+        }
+
+        /// <summary>
         /// Returns the ledge
         /// </summary>
         Ledge Ledge
