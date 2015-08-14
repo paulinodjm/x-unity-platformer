@@ -59,8 +59,7 @@ public class GroundedLedgeBehaviour : MonoBehaviour
             }
             else if (deltaHeight >= -_character.StepOffset)
             {
-                Debug.DrawRay(grabPosition.Value, Vector3.up, LowerLedgeColor);
-                LowerLedges.Add(ledge);
+                HandleLowerLedge(grabPosition);
             }
             else
             {
@@ -69,6 +68,10 @@ public class GroundedLedgeBehaviour : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Handle the upper ledge detection
+    /// </summary>
+    /// <param name="grabPosition">The grab position</param>
     private void HandleUpperLedge(LedgeUtils.IGrabPosition grabPosition)
     {
         var climbPosition = grabPosition.CheckClimbPosition(LedgeUtils.SideStyle.Far, _character.Radius, _character.Height, FallDistance, ClimbMargin, CollisionMask, GroundMargin);
@@ -87,5 +90,38 @@ public class GroundedLedgeBehaviour : MonoBehaviour
         Debug.DrawRay(climbPosition.Value, Vector3.up, UpperLedgeColor);
 
         UpperLedges.Add(grabPosition.Ledge);
+    }
+
+    /// <summary>
+    /// Handle the lower ledge detection
+    /// </summary>
+    /// <param name="grabPosition">The grab position</param>
+    private void HandleLowerLedge(LedgeUtils.IGrabPosition grabPosition)
+    {
+        var upperSide = LedgeUtils.SideStyle.Near;
+
+        LedgeUtils.IFallPosition fallPosition;
+        fallPosition = grabPosition.CheckFallPosition(LedgeUtils.SideStyle.Far, _character.Radius, _character.Height, WallMargin, FallHeight, CollisionMask, GroundMargin);
+        if (fallPosition == null)
+        {
+            fallPosition = grabPosition.CheckFallPosition(LedgeUtils.SideStyle.Near, _character.Radius, _character.Height, WallMargin, FallHeight, CollisionMask, GroundMargin);
+            if (fallPosition == null)
+                return;
+
+            upperSide = LedgeUtils.SideStyle.Far;
+        }
+
+        var deltaHeight = grabPosition.Value.y + GroundMargin - fallPosition.Value.y;
+        if (deltaHeight <= _character.StepOffset)
+            return;
+
+        // check the position on top of the ledge
+        var climbPosition = grabPosition.CheckClimbPosition(upperSide, _character.Radius, _character.Height, FallDistance, ClimbMargin, CollisionMask, GroundMargin);
+        if (climbPosition == null)
+            return;
+
+        Debug.DrawRay(fallPosition.Value, Vector3.up, LowerLedgeColor);
+        Debug.DrawRay(climbPosition.Value, Vector3.up, UpperLedgeColor);
+        LowerLedges.Add(grabPosition.Ledge);
     }
 }
