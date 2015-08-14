@@ -29,10 +29,18 @@ public class GroundedLedgeBehaviour : MonoBehaviour
     public Color UpperLedgeColor = Color.blue;
     public Color LowerLedgeColor = Color.black;
 
-    public List<Ledge> UpperLedges;
     public List<Ledge> LowerLedges;
 
     #endregion
+
+    /// <summary>
+    /// Returns the available upper ledges
+    /// </summary>
+    public List<IUpperLedge> UpperLedges
+    {
+        get;
+        private set;
+    }
 
     private LedgeSensor _ledgeSensor;
     private ICharacterProperties _character;
@@ -41,6 +49,8 @@ public class GroundedLedgeBehaviour : MonoBehaviour
     {
         _ledgeSensor = GetComponent<LedgeSensor>();
         _character = GetComponent<ICharacterProperties>();
+
+        UpperLedges = new List<IUpperLedge>();
     }
 
     protected void Update()
@@ -93,7 +103,12 @@ public class GroundedLedgeBehaviour : MonoBehaviour
             Debug.DrawRay(grabPosition.Value, -climbPosition.GrabPosition.PerpendicularGrabDirection * climbPosition.GrabPosition.PerpendicularGrabDistance, UpperLedgeColor);
         }
 
-        UpperLedges.Add(grabPosition.Ledge);
+        UpperLedges.Add(new UpperLedge()
+            {
+                GrabPosition = grabPosition,
+                TargetPosition = climbPosition.Value,
+            }
+        );
     }
 
     /// <summary>
@@ -127,5 +142,39 @@ public class GroundedLedgeBehaviour : MonoBehaviour
         Debug.DrawRay(fallPosition.Value, Vector3.up, LowerLedgeColor);
         Debug.DrawRay(climbPosition.Value, Vector3.up, UpperLedgeColor);
         LowerLedges.Add(grabPosition.Ledge);
+    }
+
+    public interface IUpperLedge
+    {
+        /// <summary>
+        /// Returns the attached grab position
+        /// </summary>
+        LedgeUtils.IGrabPosition GrabPosition
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Returns the target position, on top of the ledge
+        /// </summary>
+        Vector3 TargetPosition
+        {
+            get;
+        }
+    }
+
+    private class UpperLedge : IUpperLedge
+    {
+        public LedgeUtils.IGrabPosition GrabPosition
+        {
+            get;
+            set;
+        }
+
+        public Vector3 TargetPosition
+        {
+            get;
+            set;
+        }
     }
 }
