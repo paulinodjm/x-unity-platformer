@@ -26,9 +26,6 @@ public class GroundedLedgeBehaviour : MonoBehaviour
     [Tooltip("The vertical distance to check when capsule casting the fall position")]
     public float FallHeight = 2F;
 
-    public Color UpperLedgeColor = Color.blue;
-    public Color LowerLedgeColor = Color.black;
-
     #endregion
 
     /// <summary>
