@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Common;
 
 [RequireComponent(typeof(LedgeSensor))]
-[RequireComponent(typeof(ICharacterProperties))]
 public class GroundedLedgeBehaviour : MonoBehaviour
 {
     #region Inspector
