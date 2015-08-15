@@ -29,6 +29,25 @@ public class LedgeTest : MonoBehaviour
         // draw the climb up arrows
         foreach (var upperLedge in _ledgeSensor.UpperLedges)
         {
+            if (!upperLedge.GrabPosition.IsInFront)
+            {
+                var skipIt = true;
+                foreach (var ledge in _ledgeSensor.UpperLedges)
+                {
+                    if (ledge == upperLedge)
+                        continue;
+
+                    if (!upperLedge.GrabPosition.Ledge.IsConnectedTo(ledge.GrabPosition.Ledge, 0.02F))
+                        continue;
+
+                    skipIt = false;
+                    break;
+                }
+
+                if (skipIt)
+                    continue;
+            }
+
             var arrow = Instantiate(
                 ClimbUpArrow, 
                 upperLedge.GrabPosition.Value, 
@@ -40,6 +59,25 @@ public class LedgeTest : MonoBehaviour
         // draw the climb down arrow
         foreach (var lowerLedge in _ledgeSensor.LowerLedges)
         {
+            if (!lowerLedge.GrabPosition.IsInFront)
+            {
+                var skipIt = true;
+                foreach (var ledge in _ledgeSensor.LowerLedges)
+                {
+                    if (ledge == lowerLedge)
+                        continue;
+
+                    if (!lowerLedge.GrabPosition.Ledge.IsConnectedTo(ledge.GrabPosition.Ledge, 0.02F))
+                        continue;
+
+                    skipIt = false;
+                    break;
+                }
+
+                if (skipIt)
+                    continue;
+            }
+
             Object prefab;
             if (lowerLedge.UpPosition.HasValue)
             {

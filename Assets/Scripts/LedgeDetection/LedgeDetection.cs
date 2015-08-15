@@ -1,7 +1,36 @@
 ﻿using UnityEngine;
 
-public static partial class LedgeUtils 
+public static partial class LedgeUtils
 {
+    /// <summary>
+    /// Check if a ledge is connected to another
+    /// </summary>
+    /// <param name="ledge">The ledge</param>
+    /// <param name="other">The other ledge</param>
+    /// <returns>A value telling whether the ledges are connected or not</returns>
+    public static bool IsConnectedTo(this Ledge ledge, Ledge other)
+    {
+        return (ledge.Start == other.Start)
+            || (ledge.Start == other.End)
+            || (ledge.End == other.Start)
+            || (ledge.End == other.End);
+    }
+
+    /// <summary>
+    /// Check if a ledge is connected to another
+    /// </summary>
+    /// <param name="ledge">The ledge</param>
+    /// <param name="other">The other ledge</param>
+    /// <param name="errorMargin">The minimum distance required to be connected</param>
+    /// <returns>A value telling whether the ledges are connected or not</returns>
+    public static bool IsConnectedTo(this Ledge ledge, Ledge other, float errorMargin)
+    {
+        return Vector3.Distance(ledge.Start, other.Start) <= errorMargin
+            || Vector3.Distance(ledge.Start, other.End) <= errorMargin
+            || Vector3.Distance(ledge.End, other.Start) <= errorMargin
+            || Vector3.Distance(ledge.End, other.End) <= errorMargin;
+    }
+
     /// <summary>
     /// Calcule la position la plus proche sur le rebord.
     /// </summary>
@@ -71,7 +100,7 @@ public static partial class LedgeUtils
 
             Ledge = ledge,
             FromPosition = position,
-            Margin = margin, 
+            Margin = margin,
 
             PerpendicularGrabDirection = grabDirection,
             PerpendicularGrabDistance = grabDistance,
