@@ -105,12 +105,6 @@ public class GroundedLedgeBehaviour : MonoBehaviour
         if (deltaHeight <= _character.StepOffset)
             return;
 
-        if (climbPosition.GrabPosition.IsInFront)
-        {
-            Debug.DrawRay(climbPosition.Value, Vector3.up, UpperLedgeColor);
-            Debug.DrawRay(grabPosition.Value, -climbPosition.GrabPosition.PerpendicularGrabDirection * climbPosition.GrabPosition.PerpendicularGrabDistance, UpperLedgeColor);
-        }
-
         UpperLedges.Add(
             new UpperLedge()
             {
@@ -213,16 +207,6 @@ public class GroundedLedgeBehaviour : MonoBehaviour
         else
         {
             upPosition = null;
-        }
-
-        if (fallPosition != null)
-        {
-            Debug.DrawRay(fallPosition.Value, Vector3.up, LowerLedgeColor);
-        }
-
-        if (upPosition != null)
-        {
-            Debug.DrawRay(upPosition.Value, Vector3.up, UpperLedgeColor);
         }
 
         LowerLedges.Add(

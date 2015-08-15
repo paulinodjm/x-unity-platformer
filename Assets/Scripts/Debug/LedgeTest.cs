@@ -1,79 +1,78 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 using Common;
 
 public class LedgeTest : MonoBehaviour
 {
-    [Header("Ledge")]
-    public Color LowerLedgeColor = Color.black;
-    public Color CrossedLedgeColor = Color.green;
-    public Color UpperLedgeColor = Color.red;
+    public GameObject ClimbUpArrow;
+    public GameObject ClimbDownArrow;
+    public GameObject KeepUpArrow;
+    public GameObject ForceFallArrow;
 
-    [Header("General")]
-    public LayerMask CollisionLayer;
-    public float ErrorMargin = .1F;
-
-    [Header("Climb")]
-    public Color ClimbPositionColor = Color.red;
-    public float UpperLedgeDistance = .3F;
-    public float StepHeight = .3F;
-
-    [Header("Fall")]
-    public Color FallPositionColor = Color.black;
-    public float LowerLedgeDistance = .1F;
-    public float FallHeight = 2F;
-
-    private LedgeSensor _ledgeSensor;
-    private ICharacterProperties _character;
+    private GroundedLedgeBehaviour _ledgeSensor;
+    private List<Object> _gameObjects;
 
     protected void Start()
     {
-        _ledgeSensor = GetComponent<LedgeSensor>();
-        _character = GetComponent<ICharacterProperties>();
+        _ledgeSensor = GetComponent<GroundedLedgeBehaviour>();
+        _gameObjects = new List<Object>();
     }
 
-    protected void OnDrawGizmosSelected()
+    protected void Update()
     {
-        if (_ledgeSensor == null)
-            return;
-
-        Gizmos.matrix = Matrix4x4.identity;
-
-        foreach (var ledge in _ledgeSensor.Ledges)
+        foreach (var gameObject in _gameObjects)
         {
-            var grabPosition = ledge.CalcGrabPosition(transform.position, _character.Radius + LowerLedgeDistance);
-            var isUpperLedge = grabPosition.Value.y >= transform.position.y + _character.StepOffset;
+            Destroy(gameObject);
+        }
+        _gameObjects.Clear();
 
-            var isCrossed = grabPosition.LedgeDistance <= _character.Radius;
+        // draw the climb up arrows
+        foreach (var upperLedge in _ledgeSensor.UpperLedges)
+        {
+            var arrow = Instantiate(
+                ClimbUpArrow, 
+                upperLedge.GrabPosition.Value, 
+                Quaternion.LookRotation(upperLedge.GrabPosition.PerpendicularGrabDirection)
+            );
+            _gameObjects.Add(arrow);
+        }
 
-            Gizmos.color = isUpperLedge ?  UpperLedgeColor : (isCrossed ? CrossedLedgeColor : LowerLedgeColor);
-            Gizmos.DrawLine(ledge.Start, ledge.End);
-            Gizmos.DrawSphere(grabPosition.Value, .1F);
-
-            if (isUpperLedge)
+        // draw the climb down arrow
+        foreach (var lowerLedge in _ledgeSensor.LowerLedges)
+        {
+            Object prefab;
+            if (lowerLedge.UpPosition.HasValue)
             {
-                var climbPosition = grabPosition.CheckClimbPosition(LedgeUtils.SideStyle.Far, _character.Radius, _character.Height, UpperLedgeDistance, StepHeight, CollisionLayer, ErrorMargin);
-                if (climbPosition != null)
+                if (lowerLedge.DownPosition.HasValue)
                 {
-                    var spherePosition = climbPosition.Value;
-                    spherePosition.y += _character.Radius;
-
-                    Gizmos.color = ClimbPositionColor;
-                    Gizmos.DrawSphere(spherePosition, _character.Radius);
+                    prefab = ClimbDownArrow;
+                }
+                else
+                {
+                    prefab = KeepUpArrow;
                 }
             }
             else
             {
-                var fallPosition = grabPosition.CheckFallPosition(LedgeUtils.SideStyle.Far, _character.Radius, _character.Height, LowerLedgeDistance, FallHeight, CollisionLayer, ErrorMargin);
-                if (fallPosition != null)
+                if (lowerLedge.DownPosition.HasValue)
                 {
-                    var spherePosition = fallPosition.Value;
-                    spherePosition.y += _character.Radius;
-
-                    Gizmos.color = FallPositionColor;
-                    Gizmos.DrawSphere(spherePosition, _character.Radius);
+                    prefab = ForceFallArrow;
+                }
+                else
+                {
+                    // nothing
+                    continue;
                 }
             }
+
+            var direction = lowerLedge.IsGrounded ? -lowerLedge.GrabPosition.PerpendicularGrabDirection : lowerLedge.GrabPosition.PerpendicularGrabDirection;
+
+            var arrow = Instantiate(
+                prefab,
+                lowerLedge.GrabPosition.Value,
+                Quaternion.LookRotation(direction)
+            );
+            _gameObjects.Add(arrow);
         }
     }
 }

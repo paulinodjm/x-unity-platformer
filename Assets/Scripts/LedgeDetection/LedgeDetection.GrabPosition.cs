@@ -85,7 +85,6 @@ public static partial class LedgeUtils
             IClimbCheckResult result;
             if (Physics.CheckCapsule(bottomPosition, topPosition, capsuleRadius, collisionMask))
             {
-                Debug.DrawLine(bottomPosition, topPosition, Color.red);
                 result = null;
             }
             else
@@ -114,7 +113,6 @@ public static partial class LedgeUtils
 
             if (Physics.CheckCapsule(bottomPosition, topPosition, capsuleRadius, collisionMask))
             {
-                Debug.DrawLine(bottomPosition, topPosition, Color.black);
                 return null;
             }
 
