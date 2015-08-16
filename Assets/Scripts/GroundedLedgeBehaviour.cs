@@ -88,7 +88,7 @@ public class GroundedLedgeBehaviour : MonoBehaviour
     /// <param name="grabPosition">The grab position</param>
     private void HandleUpperLedge(LedgeUtils.IGrabPosition grabPosition)
     {
-        var climbPosition = grabPosition.CheckClimbPosition(LedgeUtils.SideStyle.Far, _character.Radius, _character.Height, FallDistance, ClimbMargin, CollisionMask, GroundMargin);
+        var climbPosition = grabPosition.CheckClimbPosition(LedgeUtils.SideStyle.Far, _character.Radius, _character.Height, FallDistance + WallMargin, ClimbMargin, CollisionMask, GroundMargin);
         if (climbPosition == null)
             return;
 
@@ -194,7 +194,7 @@ public class GroundedLedgeBehaviour : MonoBehaviour
             }
         }
 
-        var climbPosition = grabPosition.CheckClimbPosition(upperSide, _character.Radius, _character.Height, FallDistance, ClimbMargin, CollisionMask, GroundMargin);
+        var climbPosition = grabPosition.CheckClimbPosition(upperSide, _character.Radius, _character.Height, FallDistance + WallMargin, ClimbMargin, CollisionMask, GroundMargin);
         Vector3? upPosition;
         if (climbPosition != null)
         {

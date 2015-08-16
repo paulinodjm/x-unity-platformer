@@ -91,6 +91,12 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        if (HandleFallingLedges())
+        {
+            _velocity = Vector3.zero;
+            return;
+        }
+
         var velocity = _velocity;
         var input = GetTransformedInput();
 
@@ -215,6 +221,89 @@ public class PlayerController : MonoBehaviour
         }
 
         velocity = new Vector3(horizontalVelocity.x, velocity.y, horizontalVelocity.z);
+    }
+
+    private bool HandleFallingLedges()
+    {
+        var shortestDistance = Single.MaxValue;
+        GroundedLedgeBehaviour.ILowerLedge nearestLedge = null;
+
+        foreach (var lowerLedge in _groundLedgeSensor.LowerLedges)
+        {
+            // skip the ledges too far to interact
+            if (lowerLedge.IsGrounded)
+            {
+                if (lowerLedge.GrabPosition.LedgeDistance > _groundLedgeSensor.FallDistance)
+                    continue;
+            }
+            else
+            {
+                if (lowerLedge.GrabPosition.LedgeDistance > _characterController.radius)
+                    continue;
+            }
+
+            var relativePosition = transform.position;
+            relativePosition.y = lowerLedge.GrabPosition.Value.y;
+
+            var distance = Vector3.Distance(relativePosition, lowerLedge.GrabPosition.Value);
+            if (distance > shortestDistance)
+                continue;
+
+            nearestLedge = lowerLedge;
+            shortestDistance = distance;
+        }
+
+        if (nearestLedge == null)
+            return false;
+
+        if (nearestLedge.DownPosition != null)
+        {
+            if (nearestLedge.UpPosition != null)
+            {
+                // choix de la direction ici
+                var fallDirection = nearestLedge.IsGrounded ? 
+                    nearestLedge.GrabPosition.PerpendicularGrabDirection : -nearestLedge.GrabPosition.PerpendicularGrabDirection;
+
+                var playerDirection = _velocity;
+                if (playerDirection.x != 0.0F || playerDirection.z != 0.0F)
+                {
+                    playerDirection.y = 0.0F;
+                    playerDirection.Normalize();
+                }
+                else
+                {
+                    playerDirection = transform.forward;
+                }
+
+                if (Vector3.Dot(fallDirection, playerDirection) > 0)
+                {
+                    transform.position = nearestLedge.DownPosition.Value;
+                }
+                else
+                {
+                    transform.position = nearestLedge.UpPosition.Value;
+                }
+                return true;
+            }
+            else
+            {
+                transform.position = nearestLedge.DownPosition.Value;
+            }
+        }
+        else
+        {
+            if (nearestLedge.UpPosition != null)
+            {
+                transform.position = nearestLedge.UpPosition.Value;
+            }
+            else
+            {
+                // nothing to do (should be impossible)
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private class TransformedInput
