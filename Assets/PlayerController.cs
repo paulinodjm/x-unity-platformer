@@ -282,6 +282,8 @@ public class PlayerController : MonoBehaviour
                 else
                 {
                     transform.position = nearestLedge.UpPosition.Value;
+                    _animationController.SetLedgeAnimation(-fallDirection, 1);
+                    Freeze();
                 }
                 return true;
             }
