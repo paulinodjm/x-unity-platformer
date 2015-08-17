@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 using System;
 using Common;
 
@@ -103,23 +102,24 @@ public class PlayerController : MonoBehaviour
         var parameters = _characterController.isGrounded ? WalkParameters : FallParameters;
         CalcVelocity(ref velocity, parameters, input);
 
-        velocity *= Time.deltaTime;
-
         if (_characterController.isGrounded)
         {
             if (_inputController.Jump)
             {
-                velocity.y = JumpForce * Time.deltaTime;
+                velocity.y = JumpForce;
             }
             else
             {
-                velocity.y = -5;
+                velocity.y = -50;
             }
         }
         else
         {
             velocity.y -= Gravity * Time.deltaTime;
         }
+
+        velocity *= Time.deltaTime;
+        
         _characterController.Move(velocity);
         _velocity = _characterController.velocity;
 
