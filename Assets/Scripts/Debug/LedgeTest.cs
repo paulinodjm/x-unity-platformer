@@ -70,6 +70,9 @@ public class LedgeTest : MonoBehaviour
                     if (!lowerLedge.GrabPosition.Ledge.IsConnectedTo(ledge.GrabPosition.Ledge, 0.02F))
                         continue;
 
+                    if (lowerLedge.IsGrounded != ledge.IsGrounded)
+                        continue;
+
                     skipIt = false;
                     break;
                 }

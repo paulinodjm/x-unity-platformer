@@ -242,6 +242,28 @@ public class PlayerController : MonoBehaviour
                     continue;
             }
 
+            if (!lowerLedge.GrabPosition.IsInFront)
+            {
+                var skipIt = true;
+                foreach (var ledge in _groundLedgeSensor.LowerLedges)
+                {
+                    if (ledge == lowerLedge)
+                        continue;
+
+                    if (!lowerLedge.GrabPosition.Ledge.IsConnectedTo(ledge.GrabPosition.Ledge, 0.02F))
+                        continue;
+
+                    if (lowerLedge.IsGrounded != ledge.IsGrounded)
+                        continue;
+
+                    skipIt = false;
+                    break;
+                }
+
+                if (skipIt)
+                    continue;
+            }
+
             var relativePosition = transform.position;
             relativePosition.y = lowerLedge.GrabPosition.Value.y;
 
