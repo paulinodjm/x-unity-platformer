@@ -225,56 +225,7 @@ public class PlayerController : MonoBehaviour
 
     private bool HandleFallingLedges()
     {
-        var shortestDistance = Single.MaxValue;
-        GroundedLedgeBehaviour.ILowerLedge nearestLedge = null;
-
-        foreach (var lowerLedge in _groundLedgeSensor.LowerLedges)
-        {
-            // skip the ledges too far to interact
-            if (lowerLedge.IsGrounded)
-            {
-                if (lowerLedge.GrabPosition.LedgeDistance > _groundLedgeSensor.FallDistance)
-                    continue;
-            }
-            else
-            {
-                if (lowerLedge.GrabPosition.LedgeDistance > _characterController.radius)
-                    continue;
-            }
-
-            if (!lowerLedge.GrabPosition.IsInFront)
-            {
-                var skipIt = true;
-                foreach (var ledge in _groundLedgeSensor.LowerLedges)
-                {
-                    if (ledge == lowerLedge)
-                        continue;
-
-                    if (!lowerLedge.GrabPosition.Ledge.IsConnectedTo(ledge.GrabPosition.Ledge, 0.02F))
-                        continue;
-
-                    if (lowerLedge.IsGrounded != ledge.IsGrounded)
-                        continue;
-
-                    skipIt = false;
-                    break;
-                }
-
-                if (skipIt)
-                    continue;
-            }
-
-            var relativePosition = transform.position;
-            relativePosition.y = lowerLedge.GrabPosition.Value.y;
-
-            var distance = Vector3.Distance(relativePosition, lowerLedge.GrabPosition.Value);
-            if (distance > shortestDistance)
-                continue;
-
-            nearestLedge = lowerLedge;
-            shortestDistance = distance;
-        }
-
+        var nearestLedge = FindNearestFallingLedge();
         if (nearestLedge == null)
             return false;
 
@@ -328,6 +279,67 @@ public class PlayerController : MonoBehaviour
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Look for the nearest falling ledge (the ledge the character must interact with)
+    /// </summary>
+    /// <returns>The nearest falling ledge</returns>
+    private GroundedLedgeBehaviour.ILowerLedge FindNearestFallingLedge()
+    {
+        var shortestDistance = Single.MaxValue;
+        GroundedLedgeBehaviour.ILowerLedge nearestLedge = null;
+
+        foreach (var lowerLedge in _groundLedgeSensor.LowerLedges)
+        {
+            // skip the ledges too far to interact
+            if (lowerLedge.IsGrounded)
+            {
+                if (lowerLedge.GrabPosition.LedgeDistance > _groundLedgeSensor.FallDistance)
+                    continue;
+            }
+            else
+            {
+                if (lowerLedge.GrabPosition.LedgeDistance > _characterController.radius)
+                    continue;
+            }
+
+            // andle ledge angles
+            if (!lowerLedge.GrabPosition.IsInFront)
+            {
+                var skipIt = true;
+                foreach (var ledge in _groundLedgeSensor.LowerLedges)
+                {
+                    if (ledge == lowerLedge)
+                        continue;
+
+                    if (!lowerLedge.GrabPosition.Ledge.IsConnectedTo(ledge.GrabPosition.Ledge, 0.02F))
+                        continue;
+
+                    if (lowerLedge.IsGrounded != ledge.IsGrounded)
+                        continue;
+
+                    skipIt = false;
+                    break;
+                }
+
+                if (skipIt)
+                    continue;
+            }
+
+            // distance filter
+            var relativePosition = transform.position;
+            relativePosition.y = lowerLedge.GrabPosition.Value.y;
+
+            var distance = Vector3.Distance(relativePosition, lowerLedge.GrabPosition.Value);
+            if (distance > shortestDistance)
+                continue;
+
+            nearestLedge = lowerLedge;
+            shortestDistance = distance;
+        }
+
+        return nearestLedge;
     }
 
     private class TransformedInput
