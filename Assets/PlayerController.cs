@@ -50,7 +50,7 @@ public class PlayerController : MonoBehaviour
 
     private Vector3 _velocity;
 
-    private bool _previousGrounded;
+    private bool _isPreviouslyGrounded;
 
     /// <summary>
     /// Returns the current player point of view.
@@ -91,28 +91,58 @@ public class PlayerController : MonoBehaviour
     {
         if (_isFrozen)
         {
-            _characterController.Move(new Vector3(0, -0.000001F, 0));
+            _characterController.Move(new Vector3(0, -50F, 0));
             return;
         }
 
-        if (_characterController.isGrounded)
+        var isGrounded = _characterController.isGrounded;
+        var isPreviouslyGrounded = _isPreviouslyGrounded;
+
+        // update
+        if (isGrounded)
         {
-            BroadcastMessage("OnGroundUpdate");
+            if (isPreviouslyGrounded)
+            {
+                BroadcastMessage("OnGroundUpdate", SendMessageOptions.RequireReceiver);
+            }
+            else
+            {
+                BroadcastMessage("OnLandingUpdate", SendMessageOptions.RequireReceiver);
+            }
         }
         else
         {
-            BroadcastMessage("OnFallUpdate");
+            BroadcastMessage("OnFallUpdate", SendMessageOptions.RequireReceiver);
+        }
+
+        // apply move
+        _isPreviouslyGrounded = _characterController.isGrounded;
+        _characterController.Move(_velocity * Time.deltaTime);
+        _velocity = _characterController.velocity;
+
+        // animate
+        if (isGrounded)
+        {
+            if (isPreviouslyGrounded)
+            {
+                BroadcastMessage("OnGroundAnimate", SendMessageOptions.DontRequireReceiver);
+            }
+            else
+            {
+                BroadcastMessage("OnLandingAnimate", SendMessageOptions.DontRequireReceiver);
+            }
+        }
+        else
+        {
+            BroadcastMessage("OnFallAnimate", SendMessageOptions.DontRequireReceiver);
         }
     }
 
     protected void OnGroundUpdate()
     {
-        print("ground");
-
         GroundedLedgeBehaviour.ILowerLedge nearestLedge;
         if (HandleNearestLedge(out nearestLedge))
         {
-            _velocity = Vector3.zero;
             return;
         }
 
@@ -124,7 +154,6 @@ public class PlayerController : MonoBehaviour
         // ledges
         if (HandleFallingLedge(nearestLedge, ref velocity))
         {
-            _velocity = Vector3.zero;
             return;
         }
 
@@ -138,11 +167,7 @@ public class PlayerController : MonoBehaviour
             velocity.y = -50;
         }
 
-        // apply move
-        velocity *= Time.deltaTime;
-
-        _characterController.Move(velocity);
-        _velocity = _characterController.velocity;
+        _velocity = velocity;
 
         // apply animation
         _animationController.UpdateAnimation(
@@ -153,23 +178,22 @@ public class PlayerController : MonoBehaviour
 
     protected void OnFallUpdate()
     {
-        print("fall");
-
         var velocity = _velocity;
         var input = GetTransformedInput();
 
         CalcVelocity(ref velocity, FallParameters, input);
         velocity.y -= Gravity * Time.deltaTime;
 
-        velocity *= Time.deltaTime;
-
-        _characterController.Move(velocity);
-        _velocity = _characterController.velocity;
+        _velocity = velocity;
 
         _animationController.UpdateAnimation(
             (_characterController.isGrounded) ? input.Move : _velocity.normalized,
             false
         );
+    }
+
+    protected void OnLandingUpdate()
+    {
     }
 
     void Freeze()
@@ -299,6 +323,7 @@ public class PlayerController : MonoBehaviour
                 else
                 {
                     transform.position = nearestLedge.UpPosition.Value;
+                    _velocity = new Vector3(0, -50, 0);
                     _animationController.SetLedgeAnimation(-fallDirection, 1);
                     Freeze();
                 }
@@ -306,6 +331,7 @@ public class PlayerController : MonoBehaviour
             else
             {
                 transform.position = nearestLedge.DownPosition.Value;
+                _velocity = new Vector3(0, -50, 0);
             }
         }
         else
@@ -313,6 +339,7 @@ public class PlayerController : MonoBehaviour
             if (nearestLedge.UpPosition != null)
             {
                 transform.position = nearestLedge.UpPosition.Value;
+                _velocity = new Vector3(0, -50, 0);
             }
             else
             {
@@ -335,6 +362,7 @@ public class PlayerController : MonoBehaviour
         if (horizontalVelocity.magnitude <= InstantStopThresholdSpeed)
         {
             transform.position = nearestLedge.UpPosition.Value;
+            _velocity = new Vector3(0, -50, 0);
             return true;
         }
 
