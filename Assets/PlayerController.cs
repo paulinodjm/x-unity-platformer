@@ -30,6 +30,9 @@ public class PlayerController : MonoBehaviour
     [Tooltip("The jump force [0; infinity]")]
     public float JumpForce;
 
+    [Tooltip("The maximum speed from which the character can instantly stop (ie: to prevent falling from a ledge)")]
+    public float InstantStopThresholdSpeed = 1F;
+
     [Tooltip("The maximum height the character can climb off without falling")]
     public float MaxClimbDownHeight;
 
@@ -90,7 +93,8 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        if (HandleFallingLedges())
+        GroundedLedgeBehaviour.ILowerLedge nearestLedge;
+        if (HandleNearestLedge(out nearestLedge))
         {
             _velocity = Vector3.zero;
             return;
@@ -101,6 +105,12 @@ public class PlayerController : MonoBehaviour
 
         var parameters = _characterController.isGrounded ? WalkParameters : FallParameters;
         CalcVelocity(ref velocity, parameters, input);
+
+        if (HandleFallingLedge(nearestLedge, ref velocity))
+        {
+            _velocity = Vector3.zero;
+            return;
+        }
 
         if (_characterController.isGrounded)
         {
@@ -223,9 +233,9 @@ public class PlayerController : MonoBehaviour
         velocity = new Vector3(horizontalVelocity.x, velocity.y, horizontalVelocity.z);
     }
 
-    private bool HandleFallingLedges()
+    private bool HandleNearestLedge(out GroundedLedgeBehaviour.ILowerLedge nearestLedge)
     {
-        var nearestLedge = FindNearestFallingLedge();
+        nearestLedge = FindNearestFallingLedge();
         if (nearestLedge == null)
             return false;
 
@@ -250,7 +260,8 @@ public class PlayerController : MonoBehaviour
 
                 if (Vector3.Dot(fallDirection, playerDirection) > 0)
                 {
-                    transform.position = nearestLedge.DownPosition.Value;
+                    // fall from the ledge
+                    return false;
                 }
                 else
                 {
@@ -258,7 +269,6 @@ public class PlayerController : MonoBehaviour
                     _animationController.SetLedgeAnimation(-fallDirection, 1);
                     Freeze();
                 }
-                return true;
             }
             else
             {
@@ -274,11 +284,28 @@ public class PlayerController : MonoBehaviour
             else
             {
                 // nothing to do (should be impossible)
+                nearestLedge = null;
                 return false;
             }
         }
 
         return true;
+    }
+
+    private bool HandleFallingLedge(GroundedLedgeBehaviour.ILowerLedge nearestLedge, ref Vector3 velocity)
+    {
+        if (nearestLedge == null)
+            return false;
+
+        var horizontalVelocity = new Vector3(velocity.x, 0, velocity.z);
+
+        if (horizontalVelocity.magnitude <= InstantStopThresholdSpeed)
+        {
+            transform.position = nearestLedge.UpPosition.Value;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
