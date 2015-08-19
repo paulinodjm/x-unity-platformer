@@ -50,6 +50,8 @@ public class PlayerController : MonoBehaviour
 
     private Vector3 _velocity;
 
+    private bool _previousGrounded;
+
     /// <summary>
     /// Returns the current player point of view.
     /// </summary>
@@ -93,6 +95,20 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        if (_characterController.isGrounded)
+        {
+            BroadcastMessage("OnGroundUpdate");
+        }
+        else
+        {
+            BroadcastMessage("OnFallUpdate");
+        }
+    }
+
+    protected void OnGroundUpdate()
+    {
+        print("ground");
+
         GroundedLedgeBehaviour.ILowerLedge nearestLedge;
         if (HandleNearestLedge(out nearestLedge))
         {
@@ -103,39 +119,56 @@ public class PlayerController : MonoBehaviour
         var velocity = _velocity;
         var input = GetTransformedInput();
 
-        var parameters = _characterController.isGrounded ? WalkParameters : FallParameters;
-        CalcVelocity(ref velocity, parameters, input);
+        CalcVelocity(ref velocity, WalkParameters, input);
 
+        // ledges
         if (HandleFallingLedge(nearestLedge, ref velocity))
         {
             _velocity = Vector3.zero;
             return;
         }
 
-        if (_characterController.isGrounded)
+        // jump
+        if (_inputController.Jump)
         {
-            if (_inputController.Jump)
-            {
-                velocity.y = JumpForce;
-            }
-            else
-            {
-                velocity.y = -50;
-            }
+            velocity.y = JumpForce;
         }
         else
         {
-            velocity.y -= Gravity * Time.deltaTime;
+            velocity.y = -50;
         }
 
+        // apply move
         velocity *= Time.deltaTime;
-        
+
+        _characterController.Move(velocity);
+        _velocity = _characterController.velocity;
+
+        // apply animation
+        _animationController.UpdateAnimation(
+            (_characterController.isGrounded) ? input.Move : _velocity.normalized,
+            true
+        );
+    }
+
+    protected void OnFallUpdate()
+    {
+        print("fall");
+
+        var velocity = _velocity;
+        var input = GetTransformedInput();
+
+        CalcVelocity(ref velocity, FallParameters, input);
+        velocity.y -= Gravity * Time.deltaTime;
+
+        velocity *= Time.deltaTime;
+
         _characterController.Move(velocity);
         _velocity = _characterController.velocity;
 
         _animationController.UpdateAnimation(
             (_characterController.isGrounded) ? input.Move : _velocity.normalized,
-            _characterController.isGrounded
+            false
         );
     }
 
@@ -244,7 +277,7 @@ public class PlayerController : MonoBehaviour
             if (nearestLedge.UpPosition != null)
             {
                 // choix de la direction ici
-                var fallDirection = nearestLedge.IsGrounded ? 
+                var fallDirection = nearestLedge.IsGrounded ?
                     nearestLedge.GrabPosition.PerpendicularGrabDirection : -nearestLedge.GrabPosition.PerpendicularGrabDirection;
 
                 var playerDirection = _velocity;
