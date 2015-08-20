@@ -152,7 +152,7 @@ public class PlayerController : MonoBehaviour
         CalcVelocity(ref velocity, WalkParameters, input);
 
         // ledges
-        if (HandleFallingLedge(nearestLedge, ref velocity))
+        if (HandleFallingLedge(nearestLedge, ref velocity, input.Direction))
         {
             return;
         }
@@ -352,14 +352,14 @@ public class PlayerController : MonoBehaviour
         return true;
     }
 
-    private bool HandleFallingLedge(GroundedLedgeBehaviour.ILowerLedge nearestLedge, ref Vector3 velocity)
+    private bool HandleFallingLedge(GroundedLedgeBehaviour.ILowerLedge nearestLedge, ref Vector3 velocity, Vector3 input)
     {
         if (nearestLedge == null)
             return false;
 
         var horizontalVelocity = new Vector3(velocity.x, 0, velocity.z);
 
-        if (horizontalVelocity.magnitude <= InstantStopThresholdSpeed)
+        if (horizontalVelocity.magnitude <= InstantStopThresholdSpeed && input == Vector3.zero)
         {
             transform.position = nearestLedge.UpPosition.Value;
             _velocity = new Vector3(0, -50, 0);
