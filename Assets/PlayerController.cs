@@ -359,6 +359,16 @@ public class PlayerController : MonoBehaviour
 
         var horizontalVelocity = new Vector3(velocity.x, 0, velocity.z);
 
+        if (!nearestLedge.IsGrounded)
+        {
+            var position = nearestLedge.DownPosition.Value;
+            position.y = transform.position.y;
+            transform.position = position;
+
+            _velocity = new Vector3(_velocity.x, 0, _velocity.z);
+            return true;
+        }
+        
         if (horizontalVelocity.magnitude <= InstantStopThresholdSpeed && input == Vector3.zero)
         {
             transform.position = nearestLedge.UpPosition.Value;
