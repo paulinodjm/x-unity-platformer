@@ -373,6 +373,8 @@ public class PlayerController : MonoBehaviour
         {
             transform.position = nearestLedge.UpPosition.Value;
             _velocity = new Vector3(0, -50, 0);
+            _animationController.SetLedgeStopAnimation();
+            Freeze();
             return true;
         }
 

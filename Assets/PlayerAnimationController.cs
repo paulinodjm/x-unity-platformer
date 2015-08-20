@@ -13,6 +13,8 @@ public class PlayerAnimationController : MonoBehaviour
 
     public string ClimbOffState = "ClimbOff";
 
+    public string LedgeStopState = "LedgeStop";
+
     public float TransitionDuration = 0F;
 
     [Range(0, 1)]
@@ -50,5 +52,10 @@ public class PlayerAnimationController : MonoBehaviour
             _animator.CrossFade(ClimbOffState, TransitionDuration);
         }
         transform.rotation = Quaternion.LookRotation(direction);
+    }
+
+    public void SetLedgeStopAnimation()
+    {
+        _animator.CrossFade(LedgeStopState, TransitionDuration);
     }
 }
