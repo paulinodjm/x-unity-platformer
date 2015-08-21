@@ -33,6 +33,9 @@ public class PlayerController : MonoBehaviour
     [Tooltip("The maximum speed from which the character can instantly stop (ie: to prevent falling from a ledge)")]
     public float InstantStopThresholdSpeed = 1F;
 
+    [Tooltip("The speed the character is pushed to fall of a ledge")]
+    public float PushToLedgeSpeed = 5F;
+
     [Tooltip("The maximum height the character can climb off without falling")]
     public float MaxClimbDownHeight;
 
@@ -321,8 +324,8 @@ public class PlayerController : MonoBehaviour
                     transform.position = nearestLedge.UpPosition.Value;
                     _velocity = new Vector3(0, -50, 0);
                     _animationController.SetLedgeAnimation(
-                        -fallDirection, 
-                        (nearestLedge.GrabPosition.PerpendicularGrabDistance 
+                        -fallDirection,
+                        (nearestLedge.GrabPosition.PerpendicularGrabDistance
                         + Vector3.Distance(nearestLedge.GrabPosition.Value, transform.position)) / 2
                     );
                     Freeze();
@@ -359,17 +362,22 @@ public class PlayerController : MonoBehaviour
 
         var horizontalVelocity = new Vector3(velocity.x, 0, velocity.z);
 
+        // si le personnage a les pieds dans le vide, le pousse pour le faire tomber
         if (!nearestLedge.IsGrounded)
         {
-            var position = nearestLedge.DownPosition.Value;
-            position.y = transform.position.y;
-            transform.position = position;
+            PushToLedge(nearestLedge, ref velocity);
+            return false;
 
-            _velocity = new Vector3(_velocity.x, 0, _velocity.z);
-            SetState("OnFall");
-            return true;
+            //var position = nearestLedge.DownPosition.Value;
+            //position.y = transform.position.y;
+            //transform.position = position;
+
+            ////_velocity = new Vector3(_velocity.x, 0, _velocity.z);
+            ////SetState("OnFall");
+            //return true;
         }
-        
+
+        // Arrêt en position de déséquilibre
         if (horizontalVelocity.magnitude <= InstantStopThresholdSpeed && input == Vector3.zero)
         {
             transform.position = nearestLedge.UpPosition.Value;
@@ -441,6 +449,17 @@ public class PlayerController : MonoBehaviour
         }
 
         return nearestLedge;
+    }
+
+    private void PushToLedge(GroundedLedgeBehaviour.ILowerLedge nearestLedge, ref Vector3 velocity)
+    {
+        var currentLedgeSpeed = Vector3.Project(velocity, nearestLedge.GrabPosition.PerpendicularGrabDirection);
+        velocity -= currentLedgeSpeed;
+
+        var fallDirection = nearestLedge.IsGrounded ?
+                    nearestLedge.GrabPosition.PerpendicularGrabDirection : -nearestLedge.GrabPosition.PerpendicularGrabDirection;
+
+        velocity += fallDirection * PushToLedgeSpeed;
     }
 
     private class TransformedInput
