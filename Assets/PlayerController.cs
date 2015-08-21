@@ -320,7 +320,11 @@ public class PlayerController : MonoBehaviour
                 {
                     transform.position = nearestLedge.UpPosition.Value;
                     _velocity = new Vector3(0, -50, 0);
-                    _animationController.SetLedgeAnimation(-fallDirection, 1);
+                    _animationController.SetLedgeAnimation(
+                        -fallDirection, 
+                        (nearestLedge.GrabPosition.PerpendicularGrabDistance 
+                        + Vector3.Distance(nearestLedge.GrabPosition.Value, transform.position)) / 2
+                    );
                     Freeze();
                 }
             }

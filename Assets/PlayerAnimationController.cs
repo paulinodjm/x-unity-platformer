@@ -9,6 +9,8 @@ public class PlayerAnimationController : MonoBehaviour
 
     public string GroundedParameter = "Grounded";
 
+    public string ClimbOnDeepState = "ClimbOnDeep";
+
     public string ClimbOnState = "ClimbOn";
 
     public string ClimbOffState = "ClimbOff";
@@ -23,10 +25,12 @@ public class PlayerAnimationController : MonoBehaviour
     #endregion
 
     private Animator _animator;
+    private CharacterController _character;
 
     void Awake()
     {
         _animator = GetComponent<Animator>();
+        _character = GetComponent<CharacterController>();
     }
 
     public void UpdateAnimation(Vector3 velocity, bool grounded)
@@ -43,14 +47,17 @@ public class PlayerAnimationController : MonoBehaviour
 
     public void SetLedgeAnimation(Vector3 direction, float height)
     {
-        if (height > 0F)
+        string state;
+        if (height >= 0F)
         {
-            _animator.CrossFade(ClimbOnState, TransitionDuration);
+            state = (height > _character.radius / 2) ? ClimbOnDeepState : ClimbOnState;
         }
-        if (height < 0F)
+        else
         {
-            _animator.CrossFade(ClimbOffState, TransitionDuration);
+            state = ClimbOffState;
         }
+
+        _animator.CrossFade(state, TransitionDuration);
         transform.rotation = Quaternion.LookRotation(direction);
     }
 
