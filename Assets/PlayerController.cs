@@ -57,6 +57,8 @@ public class PlayerController : MonoBehaviour
 
     private string _nextState = "OnGround";
 
+    private bool _isGrounded;
+
     public string CurrentState
     {
         get;
@@ -132,7 +134,8 @@ public class PlayerController : MonoBehaviour
         var velocity = _velocity;
         var input = GetTransformedInput();
 
-        CalcVelocity(ref velocity, WalkParameters, input);
+        var moveParameters = _isGrounded ? WalkParameters : FallParameters;
+        CalcVelocity(ref velocity, moveParameters, input);
 
         // ledges
         if (HandleFallingLedge(nearestLedge, ref velocity, input.Direction))
@@ -141,51 +144,36 @@ public class PlayerController : MonoBehaviour
         }
 
         // jump
-        if (_inputController.Jump)
+        if (_isGrounded)
         {
-            velocity.y = JumpForce;
-            SetState("OnFall");
+            if (_inputController.Jump)
+            {
+                velocity.y = JumpForce;
+                _isGrounded = false;
+            }
+            else
+            {
+                velocity.y = -50;
+            }
         }
         else
         {
-            velocity.y = -50;
+            velocity.y -= Gravity * Time.deltaTime;
         }
 
+        var previousGrounded = _characterController.isGrounded;
         _characterController.Move(velocity * Time.deltaTime);
         _velocity = _characterController.velocity;
+        if (previousGrounded == _isGrounded)
+        {
+            _isGrounded = _characterController.isGrounded;
+        }
 
         // apply animation
         _animationController.UpdateAnimation(
-            input.Move,
-            true
+            _isGrounded ? input.Move : transform.forward,
+            _isGrounded
         );
-
-        if (!_characterController.isGrounded)
-        {
-            SetState("OnFall");
-        }
-    }
-
-    protected void OnFallUpdate()
-    {
-        var velocity = _velocity;
-        var input = GetTransformedInput();
-
-        CalcVelocity(ref velocity, FallParameters, input);
-        velocity.y -= Gravity * Time.deltaTime;
-
-        _characterController.Move(velocity * Time.deltaTime);
-        _velocity = _characterController.velocity;
-
-        _animationController.UpdateAnimation(
-            transform.forward,
-            false
-        );
-
-        if (_characterController.isGrounded)
-        {
-            SetState("OnGround");
-        }
     }
 
     void Freeze()
@@ -309,7 +297,7 @@ public class PlayerController : MonoBehaviour
 
                 if (Vector3.Dot(fallDirection, playerDirection) > 0)
                 {
-                    // fall from the ledge
+                    // fall naturally from the ledge
                     return false;
                 }
                 else
@@ -322,20 +310,27 @@ public class PlayerController : MonoBehaviour
                         + Vector3.Distance(nearestLedge.GrabPosition.Value, transform.position)) / 2
                     );
                     Freeze();
+                    _isGrounded = true;
                 }
             }
             else
             {
-                transform.position = nearestLedge.DownPosition.Value;
-                _velocity = new Vector3(0, -50, 0);
+                // descente forcée
+                if (!_isGrounded)
+                {
+                    nearestLedge = null;
+                }
+                return false;
             }
         }
         else
         {
             if (nearestLedge.UpPosition != null)
             {
+                // montée forcée
                 transform.position = nearestLedge.UpPosition.Value;
                 _velocity = new Vector3(0, -50, 0);
+                _isGrounded = true;
             }
             else
             {
@@ -356,11 +351,15 @@ public class PlayerController : MonoBehaviour
         var horizontalVelocity = new Vector3(velocity.x, 0, velocity.z);
 
         // si le personnage a les pieds dans le vide, le pousse pour le faire tomber
-        if (!nearestLedge.IsGrounded)
+        if (nearestLedge.UpPosition == null || !nearestLedge.IsGrounded)
         {
             PushToLedge(nearestLedge, ref velocity);
+            _isGrounded = false;
             return false;
         }
+
+        if (!_isGrounded) // la suite n'est que pour quand il est au sol
+            return false;
 
         // Arrêt en position de déséquilibre
         if (horizontalVelocity.magnitude <= InstantStopThresholdSpeed && input == Vector3.zero)
@@ -369,6 +368,7 @@ public class PlayerController : MonoBehaviour
             _velocity = new Vector3(0, -50, 0);
             _animationController.SetLedgeStopAnimation();
             Freeze();
+            _isGrounded = true;
             return true;
         }
 
