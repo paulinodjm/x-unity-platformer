@@ -139,6 +139,7 @@ ModelImporter:
     7400018: ClimbOff
     7400020: ClimbDown
     7400022: LedgeStop
+    7400024: ClimbOnDeep
     9500000: //RootNode
     11100000: //RootNode
     13700000: LaraCroft
@@ -663,10 +664,10 @@ ModelImporter:
       maskType: 0
       maskSource: {instanceID: 0}
     - serializedVersion: 16
-      name: ClimbOn
-      takeName: ClimbOn
+      name: ClimbOnDeep
+      takeName: ClimbOnDeep
       firstFrame: 0
-      lastFrame: 75
+      lastFrame: 81
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
