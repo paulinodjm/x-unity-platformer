@@ -119,13 +119,6 @@ public class PlayerController : MonoBehaviour
 
         // update
         BroadcastMessage(CurrentState + "Update", SendMessageOptions.RequireReceiver);
-
-        // apply move
-        _characterController.Move(_velocity * Time.deltaTime);
-        _velocity = _characterController.velocity;
-
-        // animate
-        BroadcastMessage(CurrentState + "Animate", SendMessageOptions.DontRequireReceiver);
     }
 
     protected void OnGroundUpdate()
@@ -158,13 +151,19 @@ public class PlayerController : MonoBehaviour
             velocity.y = -50;
         }
 
-        _velocity = velocity;
+        _characterController.Move(velocity * Time.deltaTime);
+        _velocity = _characterController.velocity;
 
         // apply animation
         _animationController.UpdateAnimation(
             input.Move,
             true
         );
+
+        if (!_characterController.isGrounded)
+        {
+            SetState("OnFall");
+        }
     }
 
     protected void OnFallUpdate()
@@ -175,20 +174,14 @@ public class PlayerController : MonoBehaviour
         CalcVelocity(ref velocity, FallParameters, input);
         velocity.y -= Gravity * Time.deltaTime;
 
-        _velocity = velocity;
+        _characterController.Move(velocity * Time.deltaTime);
+        _velocity = _characterController.velocity;
 
         _animationController.UpdateAnimation(
             transform.forward,
             false
         );
-    }
 
-    protected void OnLandingUpdate()
-    {
-    }
-
-    protected void OnFallAnimate()
-    {
         if (_characterController.isGrounded)
         {
             SetState("OnGround");
@@ -367,14 +360,6 @@ public class PlayerController : MonoBehaviour
         {
             PushToLedge(nearestLedge, ref velocity);
             return false;
-
-            //var position = nearestLedge.DownPosition.Value;
-            //position.y = transform.position.y;
-            //transform.position = position;
-
-            ////_velocity = new Vector3(_velocity.x, 0, _velocity.z);
-            ////SetState("OnFall");
-            //return true;
         }
 
         // Arrêt en position de déséquilibre
