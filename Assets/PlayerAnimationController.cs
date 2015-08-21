@@ -13,7 +13,7 @@ public class PlayerAnimationController : MonoBehaviour
 
     public string ClimbOffState = "ClimbOff";
 
-    public string LedgeStopState = "LedgeStop";
+    public string LedgeStopParameter = "LedgeStop";
 
     public float TransitionDuration = 0F;
 
@@ -56,6 +56,6 @@ public class PlayerAnimationController : MonoBehaviour
 
     public void SetLedgeStopAnimation()
     {
-        _animator.CrossFade(LedgeStopState, TransitionDuration);
+        _animator.SetTrigger(LedgeStopParameter);
     }
 }

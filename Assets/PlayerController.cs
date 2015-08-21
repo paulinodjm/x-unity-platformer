@@ -52,6 +52,19 @@ public class PlayerController : MonoBehaviour
 
     private bool _isPreviouslyGrounded;
 
+    private string _nextState = "OnGround";
+
+    public string CurrentState
+    {
+        get;
+        private set;
+    }
+
+    public void SetState(string name)
+    {
+        _nextState = name;
+    }
+
     /// <summary>
     /// Returns the current player point of view.
     /// </summary>
@@ -95,47 +108,21 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        var isGrounded = _characterController.isGrounded;
-        var isPreviouslyGrounded = _isPreviouslyGrounded;
+        if (_nextState != null)
+        {
+            CurrentState = _nextState;
+            _nextState = null;
+        }
 
         // update
-        if (isGrounded)
-        {
-            if (isPreviouslyGrounded)
-            {
-                BroadcastMessage("OnGroundUpdate", SendMessageOptions.RequireReceiver);
-            }
-            else
-            {
-                BroadcastMessage("OnLandingUpdate", SendMessageOptions.RequireReceiver);
-            }
-        }
-        else
-        {
-            BroadcastMessage("OnFallUpdate", SendMessageOptions.RequireReceiver);
-        }
+        BroadcastMessage(CurrentState + "Update", SendMessageOptions.RequireReceiver);
 
         // apply move
-        _isPreviouslyGrounded = _characterController.isGrounded;
         _characterController.Move(_velocity * Time.deltaTime);
         _velocity = _characterController.velocity;
 
         // animate
-        if (isGrounded)
-        {
-            if (isPreviouslyGrounded)
-            {
-                BroadcastMessage("OnGroundAnimate", SendMessageOptions.DontRequireReceiver);
-            }
-            else
-            {
-                BroadcastMessage("OnLandingAnimate", SendMessageOptions.DontRequireReceiver);
-            }
-        }
-        else
-        {
-            BroadcastMessage("OnFallAnimate", SendMessageOptions.DontRequireReceiver);
-        }
+        BroadcastMessage(CurrentState + "Animate", SendMessageOptions.DontRequireReceiver);
     }
 
     protected void OnGroundUpdate()
@@ -161,6 +148,7 @@ public class PlayerController : MonoBehaviour
         if (_inputController.Jump)
         {
             velocity.y = JumpForce;
+            SetState("OnFall");
         }
         else
         {
@@ -171,7 +159,7 @@ public class PlayerController : MonoBehaviour
 
         // apply animation
         _animationController.UpdateAnimation(
-            (_characterController.isGrounded) ? input.Move : _velocity.normalized,
+            input.Move,
             true
         );
     }
@@ -187,13 +175,21 @@ public class PlayerController : MonoBehaviour
         _velocity = velocity;
 
         _animationController.UpdateAnimation(
-            (_characterController.isGrounded) ? input.Move : _velocity.normalized,
+            transform.forward,
             false
         );
     }
 
     protected void OnLandingUpdate()
     {
+    }
+
+    protected void OnFallAnimate()
+    {
+        if (_characterController.isGrounded)
+        {
+            SetState("OnGround");
+        }
     }
 
     void Freeze()
@@ -366,6 +362,7 @@ public class PlayerController : MonoBehaviour
             transform.position = position;
 
             _velocity = new Vector3(_velocity.x, 0, _velocity.z);
+            SetState("OnFall");
             return true;
         }
         
