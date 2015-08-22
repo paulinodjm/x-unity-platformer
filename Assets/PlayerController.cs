@@ -125,12 +125,6 @@ public class PlayerController : MonoBehaviour
 
     protected void OnGroundUpdate()
     {
-        GroundedLedgeBehaviour.ILowerLedge nearestLedge;
-        if (HandleNearestLedge(out nearestLedge))
-        {
-            return;
-        }
-
         var velocity = _velocity;
         var input = GetTransformedInput();
 
@@ -138,7 +132,7 @@ public class PlayerController : MonoBehaviour
         CalcVelocity(ref velocity, moveParameters, input);
 
         // ledges
-        if (HandleFallingLedge(nearestLedge, ref velocity, input.Direction))
+        if (HandleNearestLedge(ref velocity, input.Direction))
         {
             return;
         }
@@ -161,10 +155,12 @@ public class PlayerController : MonoBehaviour
             velocity.y -= Gravity * Time.deltaTime;
         }
 
-        var previousGrounded = _characterController.isGrounded;
+        var previousCharacterGrounded = _characterController.isGrounded;
+
         _characterController.Move(velocity * Time.deltaTime);
         _velocity = _characterController.velocity;
-        if (previousGrounded == _isGrounded)
+
+        if (previousCharacterGrounded == _isGrounded)
         {
             _isGrounded = _characterController.isGrounded;
         }
@@ -270,109 +266,157 @@ public class PlayerController : MonoBehaviour
         velocity = new Vector3(horizontalVelocity.x, velocity.y, horizontalVelocity.z);
     }
 
-    private bool HandleNearestLedge(out GroundedLedgeBehaviour.ILowerLedge nearestLedge)
+    private bool HandleNearestLedge(ref Vector3 velocity, Vector3 input)
     {
-        nearestLedge = FindNearestFallingLedge();
+        var nearestLedge = FindNearestFallingLedge();
         if (nearestLedge == null)
             return false;
 
+        bool result;
         if (nearestLedge.DownPosition != null)
         {
             if (nearestLedge.UpPosition != null)
             {
-                // choix de la direction ici
-                var fallDirection = nearestLedge.IsGrounded ?
-                    nearestLedge.GrabPosition.PerpendicularGrabDirection : -nearestLedge.GrabPosition.PerpendicularGrabDirection;
-
-                var playerDirection = _velocity;
-                if (playerDirection.x != 0.0F || playerDirection.z != 0.0F)
-                {
-                    playerDirection.y = 0.0F;
-                    playerDirection.Normalize();
-                }
-                else
-                {
-                    playerDirection = transform.forward;
-                }
-
-                if (Vector3.Dot(fallDirection, playerDirection) > 0)
-                {
-                    // fall naturally from the ledge
-                    return false;
-                }
-                else
-                {
-                    transform.position = nearestLedge.UpPosition.Value;
-                    _velocity = new Vector3(0, -50, 0);
-                    _animationController.SetLedgeAnimation(
-                        -fallDirection,
-                        (nearestLedge.GrabPosition.PerpendicularGrabDistance
-                        + Vector3.Distance(nearestLedge.GrabPosition.Value, transform.position)) / 2
-                    );
-                    Freeze();
-                    _isGrounded = true;
-                }
+                result = HandleFallingLedge(nearestLedge, ref velocity, input);
             }
             else
             {
-                // descente forcée
-                if (!_isGrounded)
-                {
-                    nearestLedge = null;
-                }
-                return false;
+                result = ForceClimbDown(nearestLedge, ref velocity, input);
             }
         }
         else
         {
             if (nearestLedge.UpPosition != null)
             {
-                // montée forcée
-                transform.position = nearestLedge.UpPosition.Value;
-                _velocity = new Vector3(0, -50, 0);
-                _isGrounded = true;
+                result = ForceClimbUp(nearestLedge, ref velocity, input);
             }
             else
             {
-                // nothing to do (should be impossible)
-                nearestLedge = null;
-                return false;
+                result = false;
             }
         }
 
-        return true;
+        return result;
     }
 
+    /// <summary>
+    /// Gère un rebord qui se trouve au pied du joueur, et duquel il peut aussi bien tomber que monter
+    /// </summary>
+    /// <param name="nearestLedge"></param>
+    /// <param name="velocity"></param>
+    /// <param name="input"></param>
+    /// <returns></returns>
     private bool HandleFallingLedge(GroundedLedgeBehaviour.ILowerLedge nearestLedge, ref Vector3 velocity, Vector3 input)
     {
-        if (nearestLedge == null)
+        if (!_characterController.isGrounded)
             return false;
 
-        var horizontalVelocity = new Vector3(velocity.x, 0, velocity.z);
+        if (_isGrounded)
+        {
+            var fallDirection = nearestLedge.IsGrounded ?
+            nearestLedge.GrabPosition.PerpendicularGrabDirection : -nearestLedge.GrabPosition.PerpendicularGrabDirection;
 
-        // si le personnage a les pieds dans le vide, le pousse pour le faire tomber
-        if (nearestLedge.UpPosition == null || !nearestLedge.IsGrounded)
+            Vector3 playerDirection = (input == Vector3.zero ? transform.forward : input.normalized);
+
+            if (nearestLedge.IsGrounded)
+            {
+                if (Vector3.Dot(fallDirection, playerDirection) > 0)
+                {
+                    var horizontalVelocity = velocity;
+                    horizontalVelocity.y = 0;
+
+                    if (horizontalVelocity.magnitude <= InstantStopThresholdSpeed && input == Vector3.zero)
+                    {
+                        transform.position = nearestLedge.UpPosition.Value;
+                        _animationController.SetLedgeStopAnimation();
+                        Freeze();
+                        _isGrounded = true;
+                        return true;
+                    }
+                    else
+                    {
+                        // nothing to do, he runs to his fall
+                        return false;
+                    }
+                }
+                else
+                {
+                    transform.position = nearestLedge.UpPosition.Value;
+                    _animationController.SetLedgeAnimation(
+                        -fallDirection,
+                        .1F
+                    );
+                    Freeze();
+                    _isGrounded = true;
+                    return true;
+                }
+            }
+            else
+            {
+                if (Vector3.Dot(fallDirection, playerDirection) > 0)
+                {
+                    PushToLedge(nearestLedge, ref velocity);
+                    _isGrounded = false;
+                    return false;
+                }
+                else
+                {
+                    transform.position = nearestLedge.UpPosition.Value;
+                    _animationController.SetLedgeAnimation(
+                        -fallDirection,
+                        nearestLedge.GrabPosition.PerpendicularGrabDistance
+                    );
+                    Freeze();
+                    _isGrounded = true;
+                    return true;
+                }
+            }
+        }
+        else
         {
             PushToLedge(nearestLedge, ref velocity);
-            _isGrounded = false;
             return false;
         }
+    }
 
-        if (!_isGrounded) // la suite n'est que pour quand il est au sol
+    private bool ForceClimbDown(GroundedLedgeBehaviour.ILowerLedge nearestLedge, ref Vector3 velocity, Vector3 input)
+    {
+        if (!_characterController.isGrounded)
             return false;
 
-        // Arrêt en position de déséquilibre
-        if (horizontalVelocity.magnitude <= InstantStopThresholdSpeed && input == Vector3.zero)
+        PushToLedge(nearestLedge, ref velocity);
+        _isGrounded = false;
+        return false;
+    }
+
+    private bool ForceClimbUp(GroundedLedgeBehaviour.ILowerLedge nearestLedge, ref Vector3 velocity, Vector3 input)
+    {
+        if (!_characterController.isGrounded)
+            return false;
+
+        transform.position = nearestLedge.UpPosition.Value;
+        _isGrounded = true;
+
+        var fallDirection = nearestLedge.IsGrounded ?
+            nearestLedge.GrabPosition.PerpendicularGrabDirection : -nearestLedge.GrabPosition.PerpendicularGrabDirection;
+        var playerDirection = transform.forward;
+
+        if (Vector3.Dot(fallDirection, playerDirection) > 0)
         {
-            transform.position = nearestLedge.UpPosition.Value;
-            _velocity = new Vector3(0, -50, 0);
             _animationController.SetLedgeStopAnimation();
             Freeze();
-            _isGrounded = true;
-            return true;
+        }
+        else if (nearestLedge.IsGrounded)
+        {
+            // no animations
+        }
+        else
+        {
+            _animationController.SetLedgeAnimation(-fallDirection, .1F);
+            Freeze();
         }
 
-        return false;
+        return true;
     }
 
     /// <summary>
