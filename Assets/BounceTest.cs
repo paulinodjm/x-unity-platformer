@@ -21,6 +21,18 @@ public class BounceTest : MonoBehaviour
     }
     private Vector3 _sensorVelocity;
 
+    /// <summary>
+    /// Retourne le facteur de gravité influant sur les trois axes
+    /// </summary>
+    public Vector3 Gravity
+    {
+        get
+        {
+            return _gravity;
+        }
+    }
+    private Vector3 _gravity;
+
     void Start()
     {
         if (Sensor == null)
@@ -32,13 +44,14 @@ public class BounceTest : MonoBehaviour
         _previousSensorPosition = Sensor.position;
     }
 
-	void Update ()
+    void Update()
     {
         transform.Translate(Vector3.up * Input.GetAxis("Vertical") * Speed * Time.deltaTime);
         transform.Rotate(Vector3.left, Input.GetAxis("Horizontal") * RotationSpeed * Time.deltaTime);
 
         DetectMove();
-	}
+        DetectGravity();
+    }
 
     void OnDrawGizmos()
     {
@@ -49,16 +62,20 @@ public class BounceTest : MonoBehaviour
 
         // affiche les axes
         Gizmos.color = Color.red;
-        Gizmos.DrawLine(Vector3.down*2, Vector3.up*2);
+        Gizmos.DrawLine(Vector3.down * 2, Vector3.up * 2);
         Gizmos.DrawCube(Vector3.up, Vector3.one / 10f);
         Gizmos.DrawCube(Vector3.down, Vector3.one / 10f);
 
         Gizmos.DrawLine(Vector3.left, Vector3.right);
         Gizmos.DrawLine(Vector3.back, Vector3.forward);
 
-        // affiche la bouboule
+        // affiche le capteur de déplacement (trainée)
         Gizmos.color = Color.green;
-        Gizmos.DrawSphere(SensorVelocity, .15f);
+        Gizmos.DrawWireSphere(SensorVelocity, .085f);
+
+        // affiche le capteur de gravité
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(Gravity, .07f);
     }
 
     #region Détection des mouvements du capteur
@@ -93,6 +110,19 @@ public class BounceTest : MonoBehaviour
     {
         var projected = Vector3.Project(move, normal);
         return (projected.normalized == normal) ? projected.magnitude : -projected.magnitude;
+    }
+
+    #endregion
+
+    #region Détection de l'influence de la gravité
+
+    private void DetectGravity()
+    {
+        var gravity = Vector3.down;
+
+        _gravity.x = ProjectMoveAxis(gravity, Sensor.right);
+        _gravity.y = ProjectMoveAxis(gravity, Sensor.up);
+        _gravity.z = ProjectMoveAxis(gravity, Sensor.forward);
     }
 
     #endregion
