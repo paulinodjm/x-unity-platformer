@@ -33,6 +33,30 @@ public class BounceTest : MonoBehaviour
     }
     private Vector3 _gravity;
 
+    /// <summary>
+    /// Retourne le facteur d'attraction simulée (déplacement du sensor + gravité) depuis la dernière update
+    /// </summary>
+    public Vector3 Attraction
+    {
+        get
+        {
+            return _attraction;
+        }
+    }
+    private Vector3 _attraction;
+
+    /// <summary>
+    /// Retourne le facteur d'accélération constaté sur l'accélération
+    /// </summary>
+    public Vector3 Acceleration
+    {
+        get
+        {
+            return _acceleration;
+        }
+    }
+    private Vector3 _acceleration;
+
     void Start()
     {
         if (Sensor == null)
@@ -51,6 +75,7 @@ public class BounceTest : MonoBehaviour
 
         DetectMove();
         DetectGravity();
+        CalcAttraction();
     }
 
     void OnDrawGizmos()
@@ -76,6 +101,14 @@ public class BounceTest : MonoBehaviour
         // affiche le capteur de gravité
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(Gravity, .07f);
+
+        // affiche l'indicateur d'attraction
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(Attraction, .06f);
+
+        // affiche l'indicateur d'accélération
+        Gizmos.color = Color.black;
+        Gizmos.DrawSphere(Acceleration, .05f);
     }
 
     #region Détection des mouvements du capteur
@@ -123,6 +156,21 @@ public class BounceTest : MonoBehaviour
         _gravity.x = ProjectMoveAxis(gravity, Sensor.right);
         _gravity.y = ProjectMoveAxis(gravity, Sensor.up);
         _gravity.z = ProjectMoveAxis(gravity, Sensor.forward);
+    }
+
+    #endregion
+
+    #region Calcul de l'attraction simulée
+
+    /// <summary>
+    /// Met à jour l'attraction simulée en fonction des déplacements du capteur
+    /// et de la gravité
+    /// </summary>
+    private void CalcAttraction()
+    {
+        var previousAttraction = _attraction;
+        _attraction = _gravity + _sensorVelocity;
+        _acceleration = _attraction - previousAttraction;
     }
 
     #endregion
