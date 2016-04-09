@@ -1,16 +1,50 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
+using System.Collections.Generic;
 
 public class BounceTest : MonoBehaviour
 {
+    [Header("Velocity Sensor")]
+    [Tooltip("Whether the move sensor is used")]
+    public bool UseVelocity = true;
+    [Tooltip("The move sensor; if not provided, the object itselfs")]
     public Transform Sensor;
 
+    [Header("Gravity")]
+    [Tooltip("Whether the gravity is used")]
+    public bool UseGravity = true;
+    [Tooltip("The used gravity force")]
+    public Vector3 Gravity;
+
+    [Header("Debug")]
     public float RotationSpeed;
-    public float Speed;
+
+    [Tooltip("The acceleration equivalent to one time the gravity (0 = no scaling)")]
+    public float Scale;
+
+    public float Accel;
+    public float MaxSpeed;
+    public float Friction;
+    private float _speed;
+
+    private List<string> _messages ;
+
     public float SpeedScale;
 
     /// <summary>
-    /// Retourne le décalage actuel de la base par rapport au senseur
+    /// Retourne la transformation actuellement utilisée comme capteur (n'est jamais nulle)
+    /// </summary>
+    public Transform CurrentSensor
+    {
+        get
+        {
+            return (Sensor != null ? Sensor : transform);
+        }
+    }
+
+    /// <summary>
+    /// Retourne la vélocité du capteur (coordonnées locales)
     /// </summary>
     public Vector3 SensorVelocity
     {
@@ -22,68 +56,43 @@ public class BounceTest : MonoBehaviour
     private Vector3 _sensorVelocity;
 
     /// <summary>
-    /// Retourne le facteur de gravité influant sur les trois axes
+    /// Retourne l'accélération ressentie (coordonnées locales)
     /// </summary>
-    public Vector3 Gravity
+    public Vector3 AccelerationFelt
     {
         get
         {
-            return _gravity;
+            return _accelerationFelt;
         }
     }
-    private Vector3 _gravity;
+    private Vector3 _accelerationFelt;
 
-    /// <summary>
-    /// Retourne le facteur d'attraction simulée (déplacement du sensor + gravité) depuis la dernière update
-    /// </summary>
-    public Vector3 Attraction
+    void Awake()
     {
-        get
-        {
-            return _attraction;
-        }
+        _messages = new List<string>();
     }
-    private Vector3 _attraction;
-
-    /// <summary>
-    /// Retourne le facteur d'accélération constaté sur l'accélération
-    /// </summary>
-    public Vector3 Acceleration
-    {
-        get
-        {
-            return _acceleration;
-        }
-    }
-    private Vector3 _acceleration;
 
     void Start()
     {
-        if (Sensor == null)
-        {
-            Debug.LogError("No anchor");
-            enabled = false;
-        }
-
-        _previousSensorPosition = Sensor.position;
+        _previousSensorPosition = CurrentSensor.position;
     }
 
     void Update()
     {
-        transform.Translate(Vector3.up * Input.GetAxis("Vertical") * Speed * Time.deltaTime);
-        transform.Rotate(Vector3.left, Input.GetAxis("Horizontal") * RotationSpeed * Time.deltaTime);
+        _messages.Clear();
+
+        var move = Input.GetAxis("Vertical") * MaxSpeed;
+        var strafe = Input.GetAxis("Horizontal") * MaxSpeed;
+
+        transform.Translate(Vector3.forward * move * Time.deltaTime);
+        transform.Translate(Vector3.right * strafe * Time.deltaTime);
 
         DetectMove();
-        DetectGravity();
-        CalcAttraction();
     }
 
     void OnDrawGizmos()
     {
-        if (Sensor == null)
-            return;
-
-        Gizmos.matrix = Matrix4x4.TRS(Sensor.position, Sensor.rotation, Vector3.one);
+        Gizmos.matrix = Matrix4x4.TRS(CurrentSensor.position, CurrentSensor.rotation, CurrentSensor.lossyScale);
 
         // affiche les axes
         Gizmos.color = Color.red;
@@ -94,29 +103,52 @@ public class BounceTest : MonoBehaviour
         Gizmos.DrawLine(Vector3.left, Vector3.right);
         Gizmos.DrawLine(Vector3.back, Vector3.forward);
 
-        // affiche le capteur de déplacement (trainée)
+        // affichage de l'accélération
+        var accelerationFactor = (Scale != 0 ? AccelerationFelt / Scale : AccelerationFelt);
+
         Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(SensorVelocity, .085f);
+        Gizmos.DrawSphere(accelerationFactor, .1f);
+    }
 
-        // affiche le capteur de gravité
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(Gravity, .07f);
-
-        // affiche l'indicateur d'attraction
-        Gizmos.color = Color.green;
-        Gizmos.DrawSphere(Attraction, .06f);
-
-        // affiche l'indicateur d'accélération
-        Gizmos.color = Color.black;
-        Gizmos.DrawSphere(Acceleration, .05f);
+    void OnGUI()
+    {
+        GUILayout.Label(_messages.Count + " messages:");
+        foreach (var message in _messages)
+        {
+            GUILayout.Label(message);
+        }
     }
 
     #region Détection des mouvements du capteur
 
     /// <summary>
-    /// Position précédente du sensor
+    /// Position précédente du sensor; utilisée pour en connaître la vélocité
     /// </summary>
     private Vector3 _previousSensorPosition;
+
+    /// <summary>
+    /// Récupère la vélocité du capteur dans l'espace de coordonnées global
+    /// </summary>
+    /// <returns>La vélocité du capteur (en unités par secondes)</returns>
+    private Vector3 PullGlobalSensorVelocity()
+    {
+        if (!UseVelocity)
+            return Vector3.zero;
+
+        var globalSensorMove = (CurrentSensor.position - _previousSensorPosition);
+        _previousSensorPosition = CurrentSensor.position;
+
+        return globalSensorMove / Time.deltaTime; // vitesse -> (u/s)
+    }
+
+    /// <summary>
+    /// Récupère la valeur correspondant à la gravité dans l'espace de coordonnées global
+    /// </summary>
+    /// <returns>La gravité (en unités par secondes²)</returns>
+    private Vector3 PullGlobalGravity()
+    {
+        return (UseGravity ? Gravity : Vector3.zero); // accélération -> (u/s²)
+    }
 
     /// <summary>
     /// Détecte les mouvements effectués par le capteur depuis la dernière update,
@@ -124,53 +156,92 @@ public class BounceTest : MonoBehaviour
     /// </summary>
     private void DetectMove()
     {
-        var rawMove = (_previousSensorPosition - Sensor.position) / Time.deltaTime; // vitesse absolue
+        var globalSensorVelocity = PullGlobalSensorVelocity();
 
-        _sensorVelocity.x = ProjectMoveAxis(rawMove, Sensor.right) / SpeedScale;
-        _sensorVelocity.y = ProjectMoveAxis(rawMove, Sensor.up) / SpeedScale;
-        _sensorVelocity.z = ProjectMoveAxis(rawMove, Sensor.forward) / SpeedScale;
+        // calcule la vélocité
+        var previousSensorVelocity = _sensorVelocity;
+        var currentSensorVelocity = ProjectMove(globalSensorVelocity, CurrentSensor);
+        _sensorVelocity = currentSensorVelocity;
 
-        _previousSensorPosition = Sensor.position;
+        var deltaVelocity = _sensorVelocity - previousSensorVelocity;
+        var acceleration = deltaVelocity / Time.deltaTime;
+
+        // la gravité
+        var globalGravity = PullGlobalGravity();
+        var gravity = ProjectMove(globalGravity, CurrentSensor);
+
+        // accélération résultante
+        _accelerationFelt = gravity - acceleration; // une accélération égale à la gravité l'"annule", en quelque sorte
+
+        // debug
+        _messages.Add(
+            String.Format("X) {0:-000.000000}u/s -> {1:000.000000}u/s | {2:000.000000}u : {3:000.000000}u/s² | {4:000.000000}u/s² | {5:000.000000}u/s²",
+            previousSensorVelocity.x,
+            currentSensorVelocity.x,
+            deltaVelocity.x,
+            acceleration.x,
+            gravity.x,
+            _accelerationFelt.x
+        ));
+        _messages.Add(
+            String.Format("Y) {0:000.000000}u/s -> {1:000.000000}u/s | {2:000.000000}u : {3:000.000000}u/s² | {4:000.000000}u/s² | {5:000.000000}u/s²",
+            previousSensorVelocity.y,
+            currentSensorVelocity.y,
+            deltaVelocity.y,
+            acceleration.y,
+            gravity.y,
+            _accelerationFelt.y
+        ));
+        _messages.Add(
+            String.Format("Z) {0:000.000000}u/s -> {1:000.000000}u/s | {2:000.000000}u : {3:000.000000}u/s² | {4:000.000000}u/s² | {5:000.000000}u/s²",
+            previousSensorVelocity.z,
+            currentSensorVelocity.z,
+            deltaVelocity.z,
+            acceleration.z,
+            gravity.z,
+            _accelerationFelt.z
+        ));
+
+        //print(
+        //    String.Format("{0:0.000000}u/s -> {1:0.000000}u/s | {2:0.000000}u : {3:0.000000}u/s² | {4:0.000000}u/s² | {5:0.000000}u/s²",
+        //    previousSensorVelocity.y,
+        //    currentSensorVelocity.y,
+        //    deltaVelocity.y,
+        //    acceleration.y,
+        //    gravity.y,
+        //    accelerationFelt.y
+        //));
     }
 
+    #endregion
+
+    #region Projection sur les axes
+
     /// <summary>
-    /// Retourne la valeur d'un déplacement sur un axe
+    /// Retourne la valeur d'un vecteur sur un axe
     /// </summary>
-    /// <param name="move">Le déplacment</param>
+    /// <param name="vector">Le vecteur</param>
     /// <param name="normal">L'axe</param>
     /// <returns>La valeur du mouvement sur cet axe</returns>
-    private float ProjectMoveAxis(Vector3 move, Vector3 normal)
+    private float ProjectMoveAxis(Vector3 vector, Vector3 normal)
     {
-        var projected = Vector3.Project(move, normal);
+        var projected = Vector3.Project(vector, normal);
         return (projected.normalized == normal) ? projected.magnitude : -projected.magnitude;
     }
 
-    #endregion
-
-    #region Détection de l'influence de la gravité
-
-    private void DetectGravity()
-    {
-        var gravity = Vector3.down;
-
-        _gravity.x = ProjectMoveAxis(gravity, Sensor.right);
-        _gravity.y = ProjectMoveAxis(gravity, Sensor.up);
-        _gravity.z = ProjectMoveAxis(gravity, Sensor.forward);
-    }
-
-    #endregion
-
-    #region Calcul de l'attraction simulée
-
     /// <summary>
-    /// Met à jour l'attraction simulée en fonction des déplacements du capteur
-    /// et de la gravité
+    /// Projette un vecteur sur un autre correspondant à l'orientation du target.
     /// </summary>
-    private void CalcAttraction()
+    /// <param name="vector">Le vecteur</param>
+    /// <param name="target">La transformation du vecteur de résultat</param>
+    /// <returns>Le vecteur projeté selon la transform</returns>
+    private Vector3 ProjectMove(Vector3 vector, Transform target)
     {
-        var previousAttraction = _attraction;
-        _attraction = _gravity + _sensorVelocity;
-        _acceleration = _attraction - previousAttraction;
+        return new Vector3(
+            ProjectMoveAxis(vector, target.right),
+            ProjectMoveAxis(vector, target.up),
+            ProjectMoveAxis(vector, target.forward)
+        );
     }
 
     #endregion
